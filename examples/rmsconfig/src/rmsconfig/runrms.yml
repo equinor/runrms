@@ -1,0 +1,16 @@
+wrapper: unset_environment
+default: 19.0.0
+exe: /opt/example/rms/
+interactive_usage_log: /var/log/runrms/usage.log
+batch_license_file: /opt/rms/licensing/lm.lic
+env:
+  PATH_PREFIX: /usr/bin
+  RMS_IPL_ARGS_TO_PYTHON: 1
+
+versions:
+  19.0.0:
+    env:
+      PYTHONPATH: /opt/rms/19.0.0/site/lib/python3.11/site-packages
+      RMS_PLUGINS_LIBRARY: /opt/rms/19.0.0/site/plugins
+      TCL_LIBRARY: /opt/rms/19.0.0/lib/tcl8.6
+      TK_LIBRARY: /opt/rms/19.0.0/lib/tcl8.6

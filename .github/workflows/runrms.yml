@@ -1,0 +1,59 @@
+name: runrms
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  release:
+    types:
+      - published
+  schedule:
+    # Run nightly to check that tests are working with latest dependencies
+    - cron: "0 0 * * *"
+
+jobs:
+
+  check-runrms:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout commit locally
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install runrms with dependencies
+        if: ${{ always() }}
+        run: |
+          pip install -U pip
+          pip install ".[dev]"
+
+      - name: List all installed packages
+        run: pip freeze
+
+      - name: Ruff check
+        if: ${{ always() }}
+        run: ruff check 
+
+      - name: Ruff format
+        if: ${{ always() }}
+        run: ruff format --check
+
+      - name: Check typing with mypy
+        if: ${{ always() }}
+        run: mypy src
+
+      - name: Run tests
+        if: ${{ always() }}
+        run: pytest -n auto tests -m "not onprem"

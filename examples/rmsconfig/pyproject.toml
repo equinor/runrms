@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rmsconfig"
+version = "1.0.0"
+
+[tool.setuptools.package-data]
+rmsconfig = ["runrms.yml"]
+
+[project.entry-points.runrms]
+config_path = "rmsconfig:runrms_config_path"

@@ -1,0 +1,117 @@
+[build-system]
+requires = [
+    "setuptools>=45.0",
+    "setuptools_scm[toml]>=6.2",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "src/runrms/version.py"
+
+[project]
+name = "runrms"
+description = "A utility to open and run AspenTech's RMS application."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "GPL-3.0" }
+authors = [
+    { name = "Equinor", email = "fg-fmu_atlas@equinor.com" },
+]
+classifiers = [
+    "Topic :: Scientific/Engineering",
+    "Topic :: Utilities",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Natural Language :: English",
+]
+dynamic = ["version"]
+dependencies = [
+    "ert>=10.2",
+    "pydantic",
+    "pyyaml",
+]
+
+[tool.setuptools.package-data]
+runrms = ["config/runrms.yml"]
+
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-xdist",
+    "ruff",
+    "types-PyYAML",
+    "types-setuptools",
+    "typing-extensions",
+]
+
+[project.urls]
+Homepage = "https://github.com/equinor/runrms"
+Repository = "https://github.com/equinor/runrms"
+Documentation = "https://github.com/equinor/runrms"
+
+[project.scripts]
+runrms = "runrms.__main__:main"
+
+[project.entry-points.ert]
+rms = "runrms._forward_model"
+
+[tool.mypy]
+exclude = ["tests"]
+
+disallow_untyped_defs = true
+extra_checks = true
+ignore_missing_imports = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.pylint]
+disable = "missing-module-docstring"
+
+[tool.pytest.ini_options]
+norecursedirs = [
+    ".git",
+    ".tox",
+    ".env",
+    "dist",
+    "build",
+]
+addopts = "-ra --strict-markers --ignore=.eggs"
+markers = [
+    "integration: Marks a test as an integration test",
+    "onprem: Marks a test as valid only in an on-prem environment",
+    "requires_ert: A test requiring ert in the environment",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+ignore = [
+    "C901",
+]
+select = [
+    "C",
+    "E",
+    "F",
+    "I",
+    "PIE",
+    "Q",
+    "RET",
+    "RSE",
+    "SIM",
+    "TCH",
+    "TID",
+    "W",
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
