@@ -1,0 +1,46 @@
+wrapper: unset_environment
+default: 14.2.2
+exe: /opt/rms/site/bin/rms
+interactive_usage_log: /var/log/runrms/usage.log
+batch_lm_license_file: /opt/rms/licensing/lm.lic
+env:
+  PATH_PREFIX: /usr/bin
+  RMS_IPL_ARGS_TO_PYTHON: 1
+
+versions:
+  12.0.2:
+    env:
+      PYTHONPATH: /opt/rms/12.0.2/site/lib/python3.11/site-packages
+      RMS_PLUGINS_LIBRARY: /opt/rms/14.2.0/site/plugins
+      TCL_LIBRARY: /opt/rms/12.0.2/lib/tcl8.6
+      TK_LIBRARY: /opt/rms/12.0.2/lib/tcl8.6
+  13.0.3:
+    env:
+      PYTHONPATH: /opt/rms/13.0.3/site/lib/python3.11/site-packages
+      RMS_PLUGINS_LIBRARY: /opt/rms/13.0.3/site/plugins
+      TCL_LIBRARY: /opt/rms/13.0.3/lib/tcl8.6
+      TK_LIBRARY: /opt/rms/13.0.3/lib/tcl8.6
+  14.2.0:
+    env:
+      PYTHONPATH: /opt/rms/14.2.0/site/lib/python3.11/site-packages
+      RMS_PLUGINS_LIBRARY: /opt/rms/14.2.0/site/plugins
+      TCL_LIBRARY: /opt/rms/14.2.0/lib/tcl8.6
+      TK_LIBRARY: /opt/rms/14.2.0/lib/tcl8.6
+  14.2.1:
+    env:
+      PYTHONPATH: /opt/rms/14.2.1/site/lib/python3.11/site-packages
+      RMS_PLUGINS_LIBRARY: /opt/rms/14.2.1/site/plugins
+      TCL_LIBRARY: /opt/rms/14.2.1/lib/tcl8.6
+      TK_LIBRARY: /opt/rms/14.2.1/lib/tcl8.6
+  14.2.2:
+    env:
+      PYTHONPATH: /opt/rms/14.2.2/site/lib/python3.11/site-packages
+      RMS_PLUGINS_LIBRARY: /opt/rms/14.2.2/site/plugins
+      TCL_LIBRARY: /opt/rms/14.2.2/lib/tcl8.6
+      TK_LIBRARY: /opt/rms/14.2.2/lib/tcl8.6
+  14.5.0:
+    env:
+      PYTHONPATH: /opt/rms/14.5.0/site/lib/python3.11/site-packages
+      RMS_PLUGINS_LIBRARY: /opt/rms/14.5.0/site/plugins
+      TCL_LIBRARY: /opt/rms/14.5.0/lib/tcl8.6
+      TK_LIBRARY: /opt/rms/14.5.0/lib/tcl8.6
