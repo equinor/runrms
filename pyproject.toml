@@ -12,7 +12,7 @@ write_to = "src/runrms/version.py"
 name = "runrms"
 description = "A utility to open and run AspenTech's RMS application."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = { text = "GPL-3.0" }
 authors = [
     { name = "Equinor", email = "fg-fmu_atlas@equinor.com" },
@@ -21,9 +21,6 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Utilities",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Natural Language :: English",
