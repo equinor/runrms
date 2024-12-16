@@ -10,7 +10,7 @@ ensemble simulation context.
 
 > [!NOTE]
 > #### Trademark Notice and Disclaimer
-> **Aspen RMS™** is a registered trademark of [Aspen Technology,Inc.](https://www.aspentech.com/en)
+> **Aspen RMS™** is a registered trademark of [Aspen Technology, Inc.](https://www.aspentech.com/en)
 > (AspenTech). Use of RMS™ is governed by AspenTech's licensing terms and
 > conditions. It is proprietary software and is neither open-source nor free. A
 > valid license agreement with AspenTech is required for its use.
