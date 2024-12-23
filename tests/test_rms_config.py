@@ -92,7 +92,6 @@ def test_init_rmsconfig_default() -> None:
     config = RMSConfig()
     assert config.version == config_yml["default"]
     assert config.site_config.exe == config_yml["exe"]
-    assert config.version_config.restricted is False
 
 
 def test_init_rmsconfig_default_version(default_config_file) -> None:

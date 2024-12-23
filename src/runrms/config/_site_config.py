@@ -22,7 +22,6 @@ class Env(BaseModel):
 class Version(BaseModel):
     """Information about different RMS versions."""
 
-    restricted: bool = Field(default=False)
     env: Env
 
 
