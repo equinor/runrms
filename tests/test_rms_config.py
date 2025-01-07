@@ -32,13 +32,11 @@ def test_resolve_version(default_config_file) -> None:
     assert _resolve_version(None, site_config, None) == "14.2.2"
 
     with pytest.raises(
-        RMSVersionError, match="The rms version provided as input is not supported."
+        RMSVersionError, match="RMS version '123.4.5' is not supported."
     ):
         _resolve_version("123.4.5", site_config, None)
 
-    with pytest.raises(
-        RMSVersionError, match="The rms version provided as input is not supported."
-    ):
+    with pytest.raises(RMSVersionError, match="RMS version 'latest' is not supported."):
         _resolve_version("latest", site_config, None)
 
 
@@ -55,7 +53,7 @@ def test_resolve_version_from_project_master(default_config_file, executor_env):
     rms_project.master.version = "10.0.0"
     with pytest.raises(
         RMSVersionError,
-        match="RMS version 10.0.0 found in the RMS project is not supported.",
+        match="RMS version '10.0.0' configured in the RMS project is not supported.",
     ):
         _resolve_version(None, site_config, rms_project)
 
