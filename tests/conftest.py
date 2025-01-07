@@ -6,12 +6,15 @@ import shutil
 import stat
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import pytest
 import yaml
 
 from runrms.config import DEFAULT_CONFIG_FILE
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @pytest.fixture(scope="session")

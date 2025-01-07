@@ -142,14 +142,14 @@ def test_rmsconfig_get_executable(
         f.write(simple_runrms_yml(exe_path))
     config = RMSConfig(config_path="runrms.yml")
     with pytest.raises(RMSExecutableError, match=f"{exe_path}/rms cannot be found"):
-        config.executable
+        _ = config.executable
 
     os.mkdir("bin")
     with open("bin/rms", "w", encoding="utf-8") as f:
         f.write("#!/bin/bash\necho 1")
 
     with pytest.raises(RMSExecutableError, match=f"{exe_path}/rms cannot be found"):
-        config.executable
+        _ = config.executable
 
     os.chmod("bin/rms", stat.S_IEXEC)
     assert config.executable == f"{exe_path}/rms"
@@ -166,7 +166,7 @@ def test_rmsconfig_get_wrapper(
         f.write(simple_runrms_yml(tmp_path))
     config = RMSConfig(config_path="runrms.yml")
     with pytest.raises(RMSWrapperError, match="disable_foo cannot be found"):
-        config.wrapper
+        _ = config.wrapper
 
     disable_foo = Path("disable_foo")
     with open(disable_foo, "w", encoding="utf-8") as f:

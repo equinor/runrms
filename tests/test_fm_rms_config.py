@@ -12,7 +12,7 @@ from runrms.config import (
 )
 
 
-def _mocked_args():
+def _mocked_args() -> Mock:
     args = Mock()
     args.iens = -1
     args.project = "project"

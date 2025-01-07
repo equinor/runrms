@@ -59,20 +59,6 @@ runrms = "runrms.__main__:main"
 [project.entry-points.ert]
 rms = "runrms._forward_model"
 
-[tool.mypy]
-exclude = ["tests"]
-
-disallow_untyped_defs = true
-extra_checks = true
-ignore_missing_imports = true
-strict_equality = true
-warn_redundant_casts = true
-warn_unused_configs = true
-warn_unused_ignores = true
-
-[tool.pylint]
-disable = "missing-module-docstring"
-
 [tool.pytest.ini_options]
 norecursedirs = [
     ".git",
@@ -81,34 +67,66 @@ norecursedirs = [
     "dist",
     "build",
 ]
-addopts = "-ra --strict-markers --ignore=.eggs"
+addopts = "-ra --strict-markers"
 markers = [
     "integration: Marks a test as an integration test",
     "onprem: Marks a test as valid only in an on-prem environment",
     "requires_ert: A test requiring ert in the environment",
 ]
 
+[tool.coverage.run]
+omit = [
+    "version.py",
+    "tests/**",
+]
+
 [tool.ruff]
 line-length = 88
+exclude = ["version.py", "*venv*/**"]
 
 [tool.ruff.lint]
 ignore = [
-    "C901",
+    "C901",  # mccabe complex structure
+    "PLR2004",  # Unnamed magic numbers
 ]
 select = [
-    "C",
-    "E",
-    "F",
-    "I",
-    "PIE",
-    "Q",
-    "RET",
-    "RSE",
-    "SIM",
-    "TCH",
-    "TID",
-    "W",
+    "B",  # flake-8-bugbear
+    "C",  # pylint-convention
+    "C90",  # mccabe
+    "E",  # pycodestyle-error
+    "F",  # pyflakes
+    "I",  # isort
+    "NPY",  # numpy
+    "PD",  # pandas-vet
+    "PIE",  # flake8-pie
+    "PL",  # pylint
+    "Q",  # flake8-quotes
+    "RET",  # flake8-return
+    "RSE",  # flake8-raise
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "TID",  # flake8-tidy-imports
+    "UP",  # pyupgrade
+    "W",  # pylint-warnings
 ]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
+
+[tool.mypy]
+exclude = '(tests|build)'
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+disallow_untyped_calls = true
+disallow_subclassing_any = true
+extra_checks = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true

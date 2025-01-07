@@ -23,6 +23,7 @@ def test_entry_point(
         f"pip install -U pip; pip install {source_root};",
         shell=True,
         executable="/bin/bash",
+        check=False,
     )
     assert make_venv.returncode == 0
 
@@ -38,6 +39,7 @@ def test_entry_point(
         text=True,
         shell=True,
         executable="/bin/bash",
+        check=False,
     )
     assert runrms_default_config.returncode == 0
     # It may end up in lib64/ over lib/
@@ -50,6 +52,7 @@ def test_entry_point(
         f"source {venv_path}/bin/activate; pip install {rmsconfig};",
         shell=True,
         executable="/bin/bash",
+        check=False,
     )
     assert install_rmsconfig.returncode == 0
 
@@ -59,6 +62,7 @@ def test_entry_point(
         text=True,
         shell=True,
         executable="/bin/bash",
+        check=False,
     )
     assert check_config_file.returncode == 0
     assert check_config_file.stdout.rstrip() in [
@@ -72,6 +76,7 @@ def test_entry_point(
         text=True,
         shell=True,
         executable="/bin/bash",
+        check=False,
     )
     # Command will fail, but assert against the error message
     assert check_dryrun.returncode == 1

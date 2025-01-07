@@ -41,7 +41,7 @@ class InteractiveRMSExecutor(RMSExecutor):
         )
         for sec in range(5, 0, -1):
             time.sleep(1)
-            print("... {}".format(sec))
+            print(f"... {sec}")
 
     def _exec_rms(self) -> int:
         """Launch RMS with correct pythonpath, pluginspath etc."""
