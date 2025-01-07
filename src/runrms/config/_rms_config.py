@@ -80,7 +80,7 @@ def _resolve_version(
         if version in site_config.versions:
             return version
         raise RMSVersionError(
-            "The rms version provided as input is not supported. "
+            f"RMS version '{version}' is not supported. "
             "To see the supported versions, run `rms -l` or `runrms -l`."
         )
     if rms_project:
@@ -96,8 +96,9 @@ def _resolve_version(
             return rms_project.master.version
 
         raise RMSVersionError(
-            f"RMS version {rms_project.master.version} "
-            "found in the RMS project is not supported."
+            f"RMS version '{rms_project.master.version}' "
+            "configured in the RMS project is not supported."
+            "To see the supported versions, run `rms -l` or `runrms -l`."
         )
 
     return site_config.default
