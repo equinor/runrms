@@ -69,7 +69,7 @@ def test_rms_forward_model_ok(tmp_path, monkeypatch, fmu_snakeoil_project):
     the rms forward model runs rms with the given arguments"""
     monkeypatch.chdir(tmp_path / "ert/model")
 
-    subprocess.run(["ert", "test_run", "snakeoil.ert", "--verbose"])
+    subprocess.run(["ert", "test_run", "snakeoil.ert", "--verbose"], check=False)
 
     with open(tmp_path / "scratch/user/snakeoil/realization-0/iter-0/jobs.json") as f:
         jobs_json = json.load(f)
@@ -90,7 +90,7 @@ def test_rms_forward_model_seed_invalid(
     create_multi_seed_file("text\n")
 
     output = subprocess.run(
-        ["ert", "test_run", "snakeoil.ert"], capture_output=True, text=True
+        ["ert", "test_run", "snakeoil.ert"], capture_output=True, text=True, check=False
     )
 
     assert (

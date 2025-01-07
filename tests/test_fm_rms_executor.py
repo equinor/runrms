@@ -12,7 +12,7 @@ from runrms.config import FMRMSConfig
 from runrms.executor import FMRMSExecutor, RMSRuntimeError
 
 
-def _create_config(
+def _create_config(  # noqa: PLR0913 Too many arguments in function definition (8 > 5)
     iens: int,
     run_path: str,
     project: str,

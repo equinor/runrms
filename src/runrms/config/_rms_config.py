@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-import sys
 from importlib import metadata as importlib_metadata
 from pathlib import Path
 from typing import Final
@@ -54,9 +53,7 @@ def _detect_os() -> str:
                 if "." in t:
                     major = t.split(".")[0]
                     osver = f"x86_64_RH_{major}"
-                    logger.debug(
-                        "RHEL version {osver} found in %s", osver, release_file
-                    )
+                    logger.debug(f"RHEL version {osver} found in {release_file}")
                     return osver
         raise ValueError("Could not detect RHEL version")
     return default_os_version
@@ -135,13 +132,8 @@ class RMSConfig:
         config_file = DEFAULT_CONFIG_FILE
 
         entry_points = importlib_metadata.entry_points()
-        if sys.version_info >= (3, 10):
-            # Python 3.12 does not implement __iter__ on this object.
-            selections = entry_points.select(group="runrms", name="config_path")
-        else:
-            selections = [
-                ep for ep in entry_points.get("runrms", []) if ep.name == "config_path"
-            ]
+        # Python 3.12 does not implement __iter__ on this object.
+        selections = entry_points.select(group="runrms", name="config_path")
         if selections:
             runrms_config_path, *_ = selections
             config_file = runrms_config_path.load()()

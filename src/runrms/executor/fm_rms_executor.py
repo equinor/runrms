@@ -8,11 +8,12 @@ import sys
 import time
 from contextlib import contextmanager
 from textwrap import dedent
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 
 from ._rms_executor import RMSExecutor, RMSRuntimeError
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from pathlib import Path
 
     from runrms.config.fm_rms_config import FMRMSConfig

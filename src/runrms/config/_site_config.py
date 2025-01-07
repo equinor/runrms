@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Self
 
 from packaging.version import parse as version_parse
 from pydantic import BaseModel, Field, model_validator
-from typing_extensions import Self
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 
 class Env(BaseModel):
-    APS_TOOLBOX_PATH: Optional[str] = Field(default=None)
+    APS_TOOLBOX_PATH: str | None = Field(default=None)
     PYTHONPATH: str
     RMS_PLUGINS_LIBRARY: str
     TCL_LIBRARY: str
@@ -31,7 +30,7 @@ class GlobalEnv(BaseModel):
 
     PATH_PREFIX: str
     RMS_IPL_ARGS_TO_PYTHON: int = Field(default=1)
-    LM_LICENSE_FILE: Optional[str] = Field(default=None)
+    LM_LICENSE_FILE: str | None = Field(default=None)
 
 
 class SiteConfig(BaseModel):
@@ -42,10 +41,10 @@ class SiteConfig(BaseModel):
     wrapper: str
     default: str
     exe: str
-    interactive_usage_log: Optional[Path] = Field(default=None)
-    batch_lm_license_file: Optional[str] = Field(default=None)
+    interactive_usage_log: Path | None = Field(default=None)
+    batch_lm_license_file: str | None = Field(default=None)
     env: GlobalEnv
-    versions: Dict[str, Version]
+    versions: dict[str, Version]
 
     def get_newest_patch_version(self, major: int, minor: int) -> int:
         latest = max(
@@ -60,9 +59,9 @@ class SiteConfig(BaseModel):
         `versions`."""
         try:
             self.versions[self.default]
-        except KeyError:
+        except KeyError as e:
             raise ValueError(
                 f"Default RMS version {self.default} does not have a corresponding "
                 "configuration."
-            )
+            ) from e
         return self

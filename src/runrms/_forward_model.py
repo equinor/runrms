@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ert import (
+from ert import (  # type: ignore
     ForwardModelStepDocumentation,
     ForwardModelStepJSON,
     ForwardModelStepPlugin,
@@ -15,7 +15,7 @@ from runrms.config.fm_rms_config import (
 )
 
 
-class Rms(ForwardModelStepPlugin):
+class Rms(ForwardModelStepPlugin):  # type: ignore
     def __init__(self) -> None:
         super().__init__(
             name="RMS",
@@ -72,7 +72,7 @@ class Rms(ForwardModelStepPlugin):
         )
 
 
-@plugin(name="runrms")
+@plugin(name="runrms")  # type: ignore
 def forward_model_configuration() -> dict[str, dict[str, str]]:
     return {
         Rms().name: {
@@ -82,6 +82,6 @@ def forward_model_configuration() -> dict[str, dict[str, str]]:
     }
 
 
-@plugin(name="runrms")
+@plugin(name="runrms")  # type: ignore
 def installable_forward_model_steps() -> list[ForwardModelStepPlugin]:
     return [Rms]
