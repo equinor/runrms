@@ -1,4 +1,5 @@
 import json
+import re
 import shutil
 import subprocess
 
@@ -93,8 +94,8 @@ def test_rms_forward_model_seed_invalid(
         ["ert", "test_run", "snakeoil.ert"], capture_output=True, text=True, check=False
     )
 
-    assert (
+    assert re.search(
         "Forward model step pre-experiment validation failed: "
-        + "FMRMSConfig: Multi seed file contains non-number values"
-        in output.stderr
+        + r"FMRMSConfig: Multi seed file \S+ contains non-number values",
+        output.stderr,
     )
