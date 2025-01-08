@@ -201,9 +201,11 @@ class FMRMSConfig(RMSConfig):
         file_desc = "Multi seed file" if is_multi else "Single seed file"
         file_desc += f" {filename.absolute()}"
         single_format_desc = "The file must contain one number"
-        multi_format_desc = "The file contents must be unique numbers, one per line. "
-        multi_format_desc += "The first line must have a count of the total numbers in "
-        multi_format_desc += "the file, excluding the count value itself"
+        multi_format_desc = (
+            "The file contents must be unique numbers, one per line. "
+            "The first line must have a count of the total numbers in "
+            "the file, excluding the count value itself"
+        )
         format_desc = multi_format_desc if is_multi else single_format_desc
 
         line_count = len(lines)
