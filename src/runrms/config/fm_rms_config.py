@@ -196,10 +196,10 @@ class FMRMSConfig(RMSConfig):
 
     @staticmethod
     def _validate_seed_source(
-        lines: list[str], filename: str, is_multi: bool, iens_max: int | None = None
+        lines: list[str], filename: Path, is_multi: bool, iens_max: int | None = None
     ) -> None:
         file_desc = "Multi seed file" if is_multi else "Single seed file"
-        file_desc += f" {filename}"
+        file_desc += f" {filename.absolute()}"
         single_format_desc = "The file must contain one number"
         multi_format_desc = "The file contents must be unique numbers, one per line. "
         multi_format_desc += "The first line must have a count of the total numbers in "

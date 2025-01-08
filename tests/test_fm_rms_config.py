@@ -92,11 +92,11 @@ def test_multi_seed_ok(fm_executor_env, iens, expected_result):
 @pytest.mark.parametrize(
     "contents, expected_error",
     [
-        ("", "Single seed file run_path/RMS_SEED is empty"),
-        ("text", "Single seed file run_path/RMS_SEED contains non-number values"),
+        ("", r"Single seed file \S+ is empty"),
+        ("text", r"Single seed file \S+ contains non-number values"),
         (
             "\n".join(["1000", "1001"]),
-            "Single seed file run_path/RMS_SEED contains multiple seed values",
+            r"Single seed file \S+ contains multiple seed values",
         ),
     ],
 )
@@ -112,28 +112,24 @@ def test_single_seed_invalid(fm_executor_env, contents, expected_error):
 @pytest.mark.parametrize(
     "contents, iens, expected_error",
     [
-        ([""], 0, "Multi seed file run_path/random.seeds is empty"),
-        (
-            ["1", "text"],
-            0,
-            "Multi seed file run_path/random.seeds contains non-number values",
-        ),
+        ([""], 0, r"Multi seed file \S+ is empty"),
+        (["1", "text"], 0, r"Multi seed file \S+ contains non-number values"),
         (
             ["2", "1000"],
             0,
-            "Multi seed file run_path/random.seeds has an incorrect "
-            + "number count value in line 1, expected 1 but found 2",
+            r"Multi seed file \S+ has an incorrect number count value "
+            + "in line 1, expected 1 but found 2",
         ),
-        (["0"], 0, "Multi seed file run_path/random.seeds has no seed values"),
+        (["0"], 0, r"Multi seed file \S+ has no seed values"),
         (
             ["2", "1000", "1000"],
             0,
-            "Multi seed file run_path/random.seeds contains non-unique seed values",
+            r"Multi seed file \S+ contains non-unique seed values",
         ),
         (
             ["1", "1000"],
             1,
-            r"Multi seed file run_path/random.seeds has too few seed values \(1\) "
+            r"Multi seed file \S+ has too few seed values \(1\) "
             + r"for the needed realization number \(2\)",
         ),
     ],
