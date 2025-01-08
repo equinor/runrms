@@ -156,12 +156,12 @@ class FMRMSConfig(RMSConfig):
             # Using existing single seed file
             with open(single_seed_file) as file_handle:
                 seed_list = [line.rstrip() for line in file_handle]
-                self._validate_seed_source(seed_list, False, iens)
+                self._validate_seed_source(seed_list, single_seed_file, False, iens)
                 seed = int(seed_list[0])
         elif multi_seed_file.exists():
             with open(multi_seed_file) as file_handle:
                 seed_list = [line.rstrip() for line in file_handle]
-                self._validate_seed_source(seed_list, True, iens)
+                self._validate_seed_source(seed_list, multi_seed_file, True, iens)
                 seed = int(seed_list[self._iens + 1])
         else:
             random.seed()
@@ -181,41 +181,59 @@ class FMRMSConfig(RMSConfig):
             if single_seed_file.exists():
                 with open(single_seed_file) as file_handle:
                     seed_list = [line.rstrip() for line in file_handle]
-                    FMRMSConfig._validate_seed_source(seed_list, False, iens_max)
+                    FMRMSConfig._validate_seed_source(
+                        seed_list, single_seed_file, False, iens_max
+                    )
             elif multi_seed_file.exists():
                 with open(multi_seed_file) as file_handle:
                     seed_list = [line.rstrip() for line in file_handle]
-                    FMRMSConfig._validate_seed_source(seed_list, True, iens_max)
+                    FMRMSConfig._validate_seed_source(
+                        seed_list, multi_seed_file, True, iens_max
+                    )
         except ValueError as err:
             return False, err
         return True, None
 
     @staticmethod
     def _validate_seed_source(
-        lines: list[str], is_multi: bool, iens_max: int | None = None
+        lines: list[str], filename: str, is_multi: bool, iens_max: int | None = None
     ) -> None:
         file_desc = "Multi seed file" if is_multi else "Single seed file"
+        file_desc += f" {filename}"
+        single_format_desc = "The file must contain one number"
+        multi_format_desc = "The file contents must be unique numbers, one per line. "
+        multi_format_desc += "The first line must have a count of the total numbers in "
+        multi_format_desc += "the file, excluding the count value itself"
+        format_desc = multi_format_desc if is_multi else single_format_desc
+
         line_count = len(lines)
         if line_count == 0:
-            raise ValueError(f"{file_desc} is empty")
+            raise ValueError(f"{file_desc} is empty. {format_desc}")
         for line in lines:
             if not line.isdigit():
-                raise ValueError(f"{file_desc} contains non-number values")
+                raise ValueError(
+                    f"{file_desc} contains non-number values. {format_desc}"
+                )
         if not is_multi:
             if line_count > 1:
-                raise ValueError(f"{file_desc} contains multiple seed values")
+                raise ValueError(
+                    f"{file_desc} contains multiple seed values. {format_desc}"
+                )
             return
 
         number_count = int(lines[0])
         numbers = lines[1:]
         if number_count != len(numbers):
             raise ValueError(
-                f"{file_desc} has an incorrect number count value in line 1"
+                f"{file_desc} has an incorrect number count value in line 1, "
+                + f"expected {len(numbers)} but found {number_count}. {format_desc}"
             )
         if number_count == 0:
-            raise ValueError(f"{file_desc} has no seed values")
+            raise ValueError(f"{file_desc} has no seed values. {format_desc}")
         if len(numbers) != len(set(numbers)):
-            raise ValueError(f"{file_desc} contains non-unique seed values")
+            raise ValueError(
+                f"{file_desc} contains non-unique seed values. {format_desc}"
+            )
         if iens_max is not None and number_count <= iens_max:
             raise ValueError(
                 f"{file_desc} has too few seed values ({number_count}) "
