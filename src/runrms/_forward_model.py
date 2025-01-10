@@ -45,10 +45,6 @@ class Rms(ForwardModelStepPlugin):  # type: ignore
                 "<RMS_OPTS>": "",
             },
             target_file="<RMS_TARGET_FILE>",
-            exec_env={
-                "PYTHONPATH": "<RMS_PYTHONPATH>",
-                "PATH_PREFIX": "<RMS_PATH_PREFIX>",
-            },
         )
 
     def validate_pre_realization_run(
@@ -74,6 +70,7 @@ class Rms(ForwardModelStepPlugin):  # type: ignore
 
 @plugin(name="runrms")  # type: ignore
 def forward_model_configuration() -> dict[str, dict[str, str]]:
+    """These exist for backward compatibility but have no effect."""
     return {
         Rms().name: {
             "RMS_PYTHONPATH": "<RMS_PYTHONPATH>",
