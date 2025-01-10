@@ -5,7 +5,6 @@ import json
 import os
 import sys
 import time
-from typing import Optional
 
 config = {"exit_status": 0}
 if os.path.isfile("action.json"):
@@ -15,13 +14,13 @@ if os.path.isfile("action.json"):
 
 def write_target_file(target_file):
     with open(target_file, "w") as f:
-        f.write("this is the target file {}\n".format(time.time()))
+        f.write(f"this is the target file {time.time()}\n")
 
 
 if "target_file" in config:
     target_file = config["target_file"]
     if os.path.isfile(target_file):
-        mtime: Optional[float] = os.path.getmtime(target_file)
+        mtime: float | None = os.path.getmtime(target_file)
     else:
         mtime = None
 

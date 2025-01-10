@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import glob
-import json
 import os
 import subprocess
 import sys
@@ -37,6 +36,11 @@ class FMRMSExecutor(RMSExecutor):
 
     config: FMRMSConfig
 
+    def __init__(self, config: FMRMSConfig) -> None:
+        super().__init__(config)
+        if (license_file := self.config.site_config.batch_lm_license_file) is not None:
+            self.update_exec_env("LM_LICENSE_FILE", license_file)
+
     def _exec_rms(self) -> int:
         """Execute RMS with given environment"""
         args = self.pre_rms_args()
@@ -64,23 +68,6 @@ class FMRMSExecutor(RMSExecutor):
 
         comp_process = subprocess.run(args=args, check=False)
         return comp_process.returncode
-
-    def _add_env_from_json(self) -> None:
-        # This function is to be removed/changed
-        # PYTHONPATH and PATH_PREFIX that could come from this json
-        # should be explicitly handled. These will arrive as
-        # RMS_PYTHONPATH and RMS_PATH_PREFIX in the existing environment(?)
-        self_exe, _ = os.path.splitext(os.path.basename(sys.argv[0]))
-        exec_env_file = f"{self_exe}_exec_env.json"
-
-        user_env = {}
-        if os.path.isfile(exec_env_file):
-            with open(exec_env_file, encoding="utf-8") as f:
-                user_env = json.load(f)
-
-        for key in set(self._exec_env.keys()) | set(user_env.keys()):
-            if user_env.get(key):
-                self._update_exec_env(key, str(user_env.get(key)), "json")
 
     def print_failure(self, exit_status: int) -> None:
         run_path = self.config.run_path.resolve()
@@ -153,11 +140,6 @@ class FMRMSExecutor(RMSExecutor):
                 "RMS environment not specified for version: "
                 f"{self.config._version_given}"
             )
-
-        self._initialize_exec_env_from_config()
-        if (license_file := self.config.site_config.batch_lm_license_file) is not None:
-            self._update_exec_env("LM_LICENSE_FILE", license_file, "config")
-        self._add_env_from_json()
 
         with pushd(self.config.run_path):
             now = time.strftime("%d-%m-%Y %H:%M:%S", time.localtime(time.time()))

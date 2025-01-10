@@ -45,10 +45,7 @@ class InteractiveRMSExecutor(RMSExecutor):
 
     def _exec_rms(self) -> int:
         """Launch RMS with correct pythonpath, pluginspath etc."""
-        self._initialize_exec_env_from_config()
-        self._update_exec_env(
-            "QT_SCALE_FACTOR", str(self.config._dpi_scaling), "config"
-        )
+        self.update_exec_env("QT_SCALE_FACTOR", str(self.config._dpi_scaling))
         pre_args = self.pre_rms_args()
 
         args = [
@@ -156,7 +153,6 @@ class InteractiveRMSExecutor(RMSExecutor):
             print(fmt.format("RMS fileversion", self.config.project.master.fileversion))
             print(fmt.format("RMS variant", self.config.project.master.variant))
 
-        print(fmt.format("System PYTHONPATH", self.pre_env.get("PYTHONPATH", "")))
         order = "first"
         print(fmt.format(f"PYTHONPATH added as {order}", self.config.env.PYTHONPATH))
         print(fmt.format("RMS plugins path", self.config.env.RMS_PLUGINS_LIBRARY))
