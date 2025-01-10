@@ -62,8 +62,7 @@ def _detect_os() -> str:
 def _load_site_config(site_config_file: str) -> SiteConfig:
     if not os.path.exists(site_config_file):
         raise RMSConfigNotFoundError(
-            "Unable to locate config file for rms\n"
-            f"{site_config_file} does not exist!"
+            f"Unable to locate config file for rms\n{site_config_file} does not exist!"
         )
     with open(site_config_file) as f:
         config = yaml.safe_load(f)
