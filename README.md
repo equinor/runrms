@@ -74,7 +74,7 @@ forward model is available at
 ## Configuration
 
 A default configuration is included in this repository at
-[src/config/runrms.yml](src/config/runrms.yml). If installed in a Python
+[src/runrms/config/runrms.yml](src/runrms/config/runrms.yml). If installed in a Python
 environment this default configuration will be used, but is probably not fit
 for your site installation.
 
@@ -143,7 +143,7 @@ A simple package that implements this is included in [examples/](examples/).
 ## Configuration values
 
 As mentioned in the previous section you can find the default configuration
-file included in this package at [src/config/runrms.yml](src/config_runrms.yml).
+file included in this package at [src/runrms/config/runrms.yml](src/runrms/config/runrms.yml).
 Here is a brief explanation of what these values mean.
 
 - `wrapper`: This is an executable that is executed _between_ the RMS
