@@ -196,7 +196,11 @@ class FMRMSConfig(RMSConfig):
 
     @staticmethod
     def _validate_seed_source(
-        lines: list[str], filename: Path, is_multi: bool, iens_max: int | None = None
+        lines: list[str],
+        filename: Path,
+        is_multi: bool,
+        iens_max: int | None = None,
+        validate_given_number_count: bool = False,
     ) -> None:
         file_desc = "Multi seed file" if is_multi else "Single seed file"
         file_desc += f" {filename.absolute()}"
@@ -223,21 +227,23 @@ class FMRMSConfig(RMSConfig):
                 )
             return
 
-        number_count = int(lines[0])
+        given_number_count = int(lines[0])
         numbers = lines[1:]
-        if number_count != len(numbers):
+        actual_number_count = len(numbers)
+        if validate_given_number_count and given_number_count != actual_number_count:
             raise ValueError(
                 f"{file_desc} has an incorrect number count value in line 1, "
-                + f"expected {len(numbers)} but found {number_count}. {format_desc}"
+                f"expected {actual_number_count} but found {given_number_count}. "
+                f"{format_desc}"
             )
-        if number_count == 0:
+        if actual_number_count == 0:
             raise ValueError(f"{file_desc} has no seed values. {format_desc}")
-        if len(numbers) != len(set(numbers)):
+        if actual_number_count != len(set(numbers)):
             raise ValueError(
                 f"{file_desc} contains non-unique seed values. {format_desc}"
             )
-        if iens_max is not None and number_count <= iens_max:
+        if iens_max is not None and actual_number_count <= iens_max:
             raise ValueError(
-                f"{file_desc} has too few seed values ({number_count}) "
-                + f"for the needed realization number ({iens_max + 1})"
+                f"{file_desc} has too few seed values ({actual_number_count}) "
+                f"for the needed realization number ({iens_max + 1})"
             )

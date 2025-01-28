@@ -114,12 +114,6 @@ def test_single_seed_invalid(fm_executor_env, contents, expected_error):
     [
         ([""], 0, r"Multi seed file \S+ is empty"),
         (["1", "text"], 0, r"Multi seed file \S+ contains non-number values"),
-        (
-            ["2", "1000"],
-            0,
-            r"Multi seed file \S+ has an incorrect number count value "
-            + "in line 1, expected 1 but found 2",
-        ),
         (["0"], 0, r"Multi seed file \S+ has no seed values"),
         (
             ["2", "1000", "1000"],
