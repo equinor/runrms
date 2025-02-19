@@ -195,12 +195,13 @@ class FMRMSConfig(RMSConfig):
         return True, None
 
     @staticmethod
-    def _validate_seed_source(
+    def _validate_seed_source(  # noqa: PLR0913
         lines: list[str],
         filename: Path,
         is_multi: bool,
         iens_max: int | None = None,
         validate_given_number_count: bool = False,
+        validate_unique_values: bool = False,
     ) -> None:
         file_desc = "Multi seed file" if is_multi else "Single seed file"
         file_desc += f" {filename.absolute()}"
@@ -238,7 +239,7 @@ class FMRMSConfig(RMSConfig):
             )
         if actual_number_count == 0:
             raise ValueError(f"{file_desc} has no seed values. {format_desc}")
-        if actual_number_count != len(set(numbers)):
+        if validate_unique_values and actual_number_count != len(set(numbers)):
             raise ValueError(
                 f"{file_desc} contains non-unique seed values. {format_desc}"
             )
