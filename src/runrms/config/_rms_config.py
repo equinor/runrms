@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 import os
 import shutil
@@ -10,6 +8,13 @@ from typing import Final
 import yaml
 from packaging.version import parse as version_parse
 
+from runrms.exceptions import (
+    RMSConfigNotFoundError,
+    RMSExecutableError,
+    RMSVersionError,
+    RMSWrapperError,
+)
+
 from ._rms_project import RMSProject
 from ._site_config import Env, GlobalEnv, SiteConfig, Version
 
@@ -18,27 +23,6 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_FILE: Final = os.path.join(os.path.dirname(__file__), "runrms.yml")
 DEFAULT_VERSION: Final = "DEFAULT"
-
-
-class RMSConfigError(ValueError):
-    """Raised when the configuration file is errorneous."""
-
-
-class RMSConfigNotFoundError(FileNotFoundError):
-    """Raised when attempting to open a site configuration that does not exist."""
-
-
-class RMSExecutableError(OSError):
-    """Raised when the RMS executable cannot be executed, either because it's
-    not found or because of invalid user access to it."""
-
-
-class RMSWrapperError(FileNotFoundError):
-    """Raised when the RMS wrapper cannot be found."""
-
-
-class RMSVersionError(ValueError):
-    """Raised when the given rms version does not exist."""
 
 
 def _detect_os() -> str:

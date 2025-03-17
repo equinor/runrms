@@ -1,24 +1,22 @@
-from __future__ import annotations
-
 import os
 import pathlib
 import shutil
 import stat
+from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pytest
 import yaml
+from pytest import FixtureRequest, MonkeyPatch
+from pytest_mock import MockerFixture
 
 from runrms.config import DEFAULT_CONFIG_FILE
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 
 @pytest.fixture(scope="session")
-def source_root(request) -> Path:
+def source_root(request: FixtureRequest) -> Path:
     return request.config.rootpath
 
 
@@ -47,7 +45,9 @@ def base_ert_rms_config() -> str:
 
 
 @pytest.fixture
-def fmu_snakeoil_project(tmp_path, monkeypatch, base_ert_rms_config) -> None:
+def fmu_snakeoil_project(
+    tmp_path: Path, monkeypatch: MonkeyPatch, base_ert_rms_config: str
+) -> None:
     """Makes a skeleton FMU project structure into a tmp_path, with a basic ERT config
     that can be appended onto."""
     monkeypatch.setenv("RUNRMS_TMP_PATH", str(tmp_path))
@@ -65,7 +65,7 @@ def fmu_snakeoil_project(tmp_path, monkeypatch, base_ert_rms_config) -> None:
 
 
 @pytest.fixture
-def create_multi_seed_file(tmp_path) -> Callable[[str], None]:
+def create_multi_seed_file(tmp_path: Path) -> Callable[[str], None]:
     """Returns a function for creating a multi seed file with the given content. The
     ert/input/distributions dir needs to already exist"""
 
@@ -78,7 +78,7 @@ def create_multi_seed_file(tmp_path) -> Callable[[str], None]:
 
 
 @pytest.fixture
-def test_env_wrapper() -> Callable[[str, str, str], str]:
+def test_env_wrapper() -> Callable[..., str]:
     def _test_env_wrapper(
         expected_path_prefix: str = "/foo/bin",
         expected_pythonpath: str = "",
@@ -122,7 +122,12 @@ def test_env_wrapper() -> Callable[[str, str, str], str]:
 
 
 @pytest.fixture
-def _env_setup(tmp_path, source_root, simple_runrms_yml, monkeypatch) -> Path:
+def _env_setup(
+    tmp_path: Path,
+    source_root: Path,
+    simple_runrms_yml: Callable[[str | Path], str],
+    monkeypatch: MonkeyPatch,
+) -> Path:
     os.chdir(tmp_path)
     os.mkdir("run_path")
     os.mkdir("bin")
@@ -145,7 +150,7 @@ def _env_setup(tmp_path, source_root, simple_runrms_yml, monkeypatch) -> Path:
 
 
 @pytest.fixture
-def executor_env(_env_setup, test_env_wrapper) -> Path:
+def executor_env(_env_setup: Path, test_env_wrapper: Callable[..., str]) -> Path:
     disable_foo = Path("bin/disable_foo")
     with open(disable_foo, "w", encoding="utf-8") as f:
         f.write(test_env_wrapper())
@@ -155,7 +160,9 @@ def executor_env(_env_setup, test_env_wrapper) -> Path:
 
 
 @pytest.fixture
-def fm_executor_env(_env_setup, test_env_wrapper, monkeypatch) -> Path:
+def fm_executor_env(
+    _env_setup: Path, test_env_wrapper: Callable[..., str], monkeypatch: MonkeyPatch
+) -> Path:
     """This sets LM_LICENSE_FILE to mock the way a wrapper might do so, either in the
     wrapper or the executable (which can be a wrapper). The forward model can set this
     environment variable to a different file or server, which can accomplish load
@@ -201,19 +208,21 @@ def simple_runrms_yml() -> Callable[[str | Path], str]:
 
 
 @pytest.fixture
-def simple_runrms_config(simple_runrms_yml) -> dict[str, str]:
+def simple_runrms_config(
+    simple_runrms_yml: Callable[[str | Path], str],
+) -> dict[str, str]:
     return yaml.safe_load(simple_runrms_yml("."))
 
 
 @pytest.fixture
-def patch_argv(mocker) -> Callable[[list[str]], None]:
+def patch_argv(mocker: MockerFixture) -> Callable[[list[str]], None]:
     def _patch_argv(options: list[str]) -> None:
         mocker.patch("sys.argv", ["runrms"] + options)
 
     return _patch_argv
 
 
-def master_version():
+def master_version() -> str:
     return dedent(
         """
                 Begin GEOMATIC file header

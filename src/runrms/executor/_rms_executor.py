@@ -1,17 +1,7 @@
-from __future__ import annotations
-
 import os
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from runrms.config import FMRMSConfig, InteractiveRMSConfig
-
-
-class RMSRuntimeError(Exception):
-    """
-    Custom error for run-time errors
-    """
+from runrms.config import FMRMSConfig, InteractiveRMSConfig
 
 
 class RMSExecutor(ABC):

@@ -117,7 +117,7 @@ convention = "google"
 combine-as-imports = true
 
 [tool.mypy]
-exclude = '(tests|build)'
+exclude = 'build'
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_incomplete_defs = true

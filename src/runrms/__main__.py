@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 import argparse
 import subprocess
 import sys
 
 from .config import FMRMSConfig, InteractiveRMSConfig
+from .exceptions import UnknownConfigError
 from .executor import FMRMSExecutor, InteractiveRMSExecutor
 
 try:
@@ -187,12 +186,6 @@ def get_parser() -> argparse.ArgumentParser:
     _add_fm_arguments(prs)
     _add_dev_arguments(prs)
     return prs
-
-
-class UnknownConfigError(Exception):
-    """
-    Custom error class for unknown config objects
-    """
 
 
 def generate_config(args: argparse.Namespace) -> FMRMSConfig | InteractiveRMSConfig:

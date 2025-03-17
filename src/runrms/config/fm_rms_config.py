@@ -1,19 +1,13 @@
-from __future__ import annotations
-
+import argparse
 import logging
 import os
 import random
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-from runrms.executor import RMSRuntimeError
+from runrms.exceptions import RMSRuntimeError
 
 from ._rms_config import RMSConfig
-
-if TYPE_CHECKING:
-    import argparse
-
-    from ._rms_project import RMSProject
+from ._rms_project import RMSProject
 
 logger = logging.getLogger(__name__)
 
