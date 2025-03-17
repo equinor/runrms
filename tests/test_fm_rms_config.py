@@ -1,12 +1,14 @@
-from __future__ import annotations
-
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from pytest import MonkeyPatch
 
 from runrms.config import (
     DEFAULT_CONFIG_FILE,
     FMRMSConfig,
+)
+from runrms.exceptions import (
     RMSProjectNotFoundError,
 )
 
@@ -27,14 +29,14 @@ def _mocked_args() -> Mock:
     return args
 
 
-def test_config_ok(fm_executor_env):
+def test_config_ok(fm_executor_env: Path) -> None:
     args = _mocked_args()
 
     config = FMRMSConfig(args)
     assert config is not None
 
 
-def test_missing_project():
+def test_missing_project() -> None:
     args = _mocked_args()
     args.project = "another_project"
 
@@ -43,7 +45,9 @@ def test_missing_project():
 
 
 @pytest.mark.parametrize("rms_seed", ["", "a", "123x"])
-def test_bad_seed_from_env_var(fm_executor_env, monkeypatch, rms_seed):
+def test_bad_seed_from_env_var(
+    fm_executor_env: Path, monkeypatch: MonkeyPatch, rms_seed: str
+) -> None:
     args = _mocked_args()
     monkeypatch.setenv("RMS_SEED", rms_seed)
 
@@ -59,7 +63,7 @@ def test_bad_seed_from_env_var(fm_executor_env, monkeypatch, rms_seed):
         (2, 422851785),
     ],
 )
-def test_single_seed_ok(fm_executor_env, iens, expected_result):
+def test_single_seed_ok(fm_executor_env: Path, iens: int, expected_result: int) -> None:
     args = _mocked_args()
     args.iens = iens
     contents = "422851785"
@@ -78,7 +82,7 @@ def test_single_seed_ok(fm_executor_env, iens, expected_result):
         (2, 132312123),
     ],
 )
-def test_multi_seed_ok(fm_executor_env, iens, expected_result):
+def test_multi_seed_ok(fm_executor_env: Path, iens: int, expected_result: int) -> None:
     args = _mocked_args()
     args.iens = iens
     contents = ["3", "422851785", "723121249", "132312123"]
@@ -100,7 +104,9 @@ def test_multi_seed_ok(fm_executor_env, iens, expected_result):
         ),
     ],
 )
-def test_single_seed_invalid(fm_executor_env, contents, expected_error):
+def test_single_seed_invalid(
+    fm_executor_env: Path, contents: str, expected_error: str
+) -> None:
     args = _mocked_args()
     with open("run_path/RMS_SEED", "w") as f:
         f.write(contents)
@@ -123,7 +129,9 @@ def test_single_seed_invalid(fm_executor_env, contents, expected_error):
         ),
     ],
 )
-def test_multi_seed_invalid(fm_executor_env, contents, iens, expected_error):
+def test_multi_seed_invalid(
+    fm_executor_env: Path, contents: list[str], iens: int, expected_error: str
+) -> None:
     args = _mocked_args()
     args.iens = iens
     with open("run_path/random.seeds", "w") as f:

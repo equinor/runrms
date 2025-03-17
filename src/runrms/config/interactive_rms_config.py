@@ -1,13 +1,8 @@
-from __future__ import annotations
-
+import argparse
 import logging
 import os
-from typing import TYPE_CHECKING
 
 from ._rms_config import RMSConfig
-
-if TYPE_CHECKING:
-    import argparse
 
 logger = logging.getLogger(__name__)
 

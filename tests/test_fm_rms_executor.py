@@ -1,15 +1,18 @@
-from __future__ import annotations
-
 import json
 import os
 import stat
 import subprocess
+from collections.abc import Callable
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from pytest import CaptureFixture, MonkeyPatch
+from pytest_mock import MockerFixture
 
 from runrms.config import FMRMSConfig
-from runrms.executor import FMRMSExecutor, RMSRuntimeError
+from runrms.exceptions import RMSRuntimeError
+from runrms.executor import FMRMSExecutor
 
 
 def _create_config(  # noqa: PLR0913 Too many arguments in function definition (8 > 5)
@@ -41,7 +44,7 @@ def _create_config(  # noqa: PLR0913 Too many arguments in function definition (
     return config
 
 
-def test_run_class(fm_executor_env, capsys):
+def test_run_class(fm_executor_env: Path, capsys: CaptureFixture[str]) -> None:
     action: dict[str, str | int] = {"exit_status": 0}
     with open("run_path/action.json", "w") as f:
         f.write(json.dumps(action))
@@ -117,7 +120,7 @@ def test_run_class(fm_executor_env, capsys):
     assert rms.run() == 0
 
 
-def test_run_class_with_existing_target_file(fm_executor_env):
+def test_run_class_with_existing_target_file(fm_executor_env: Path) -> None:
     target_file = os.path.join(fm_executor_env, "rms_target_file")
     action = {
         "exit_status": 0,
@@ -143,7 +146,9 @@ def test_run_class_with_existing_target_file(fm_executor_env):
     assert rms.run() == 0
 
 
-def test_run_wrapper(fm_executor_env, monkeypatch, capsys):
+def test_run_wrapper(
+    fm_executor_env: Path, monkeypatch: MonkeyPatch, capsys: CaptureFixture[str]
+) -> None:
     # Overwrite configured wrapper
     wrapper_file_name = f"{fm_executor_env}/bin/disable_foo"
     with open(wrapper_file_name, "w") as f:
@@ -214,7 +219,11 @@ def test_run_wrapper(fm_executor_env, monkeypatch, capsys):
     assert rms.run() == 0
 
 
-def test_run_version_env(test_env_wrapper, fm_executor_env, monkeypatch):
+def test_run_version_env(
+    test_env_wrapper: Callable[..., str],
+    fm_executor_env: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
     wrapper_file_name = f"{fm_executor_env}/bin/rms_wrapper"
     with open(wrapper_file_name, "w") as f:
         rms_wrapper = test_env_wrapper(
@@ -250,7 +259,10 @@ def test_run_version_env(test_env_wrapper, fm_executor_env, monkeypatch):
 
 
 def test_license_file_from_wrapper_overwrites(
-    test_env_wrapper, fm_executor_env, mocker, monkeypatch
+    test_env_wrapper: Callable[..., str],
+    fm_executor_env: Path,
+    mocker: MockerFixture,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     """Tests that the the batch license file configuration is preferred. This is set by
     the fm_executor_env, so we unset the environment variable to check.
@@ -284,7 +296,10 @@ def test_license_file_from_wrapper_overwrites(
 
 
 def test_user_rms_plugins_library_env_var_is_not_preferred(
-    test_env_wrapper, fm_executor_env, mocker, monkeypatch
+    test_env_wrapper: Callable[..., str],
+    fm_executor_env: Path,
+    mocker: MockerFixture,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     """Tests that if a user sets the RMS_PLUGINS_LIBRARY environment variable in their
     ERT configuration, it is _not_ preferred over the one in the site configuration.
@@ -323,7 +338,7 @@ def test_user_rms_plugins_library_env_var_is_not_preferred(
     assert rms._exec_env.get("RMS_PLUGINS_LIBRARY", False) == "/foo/plugins"
 
 
-def test_run_allow_no_env(fm_executor_env, monkeypatch):
+def test_run_allow_no_env(fm_executor_env: Path, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("PATH", f"{fm_executor_env}/bin:{os.environ['PATH']}")
 
     action = {
@@ -364,7 +379,7 @@ def test_run_allow_no_env(fm_executor_env, monkeypatch):
     assert rms.run() == 0
 
 
-def test_rms_job_script_parser(fm_executor_env, monkeypatch):
+def test_rms_job_script_parser(fm_executor_env: Path, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setenv("RMS_TEST_VAR", "fdsgfdgfdsgfds")
 
     action = {"exit_status": 0}
@@ -414,8 +429,8 @@ def test_rms_job_script_parser(fm_executor_env, monkeypatch):
 
 @pytest.mark.parametrize("exit_status", [1, 2, 137])
 def test_print_failure_when_no_logs_found_in_rms_model(
-    exit_status, fm_executor_env, capsys
-):
+    exit_status: int, fm_executor_env: Path, capsys: CaptureFixture[str]
+) -> None:
     action = {"exit_status": exit_status}
     with open("run_path/action.json", "w") as f:
         f.write(json.dumps(action))
@@ -445,7 +460,9 @@ def test_print_failure_when_no_logs_found_in_rms_model(
         assert line.startswith("\t") is False
 
 
-def test_print_failure_when_logs_found_in_rms_model(fm_executor_env, capsys):
+def test_print_failure_when_logs_found_in_rms_model(
+    fm_executor_env: Path, capsys: CaptureFixture[str]
+) -> None:
     action = {"exit_status": 1}
     with open("run_path/action.json", "w") as f:
         f.write(json.dumps(action))
@@ -465,7 +482,6 @@ def test_print_failure_when_logs_found_in_rms_model(fm_executor_env, capsys):
     assert rms.run() == 1
 
     captured = capsys.readouterr()
-    print(captured.err)
     assert "failed with exit status: 1" in captured.err
     assert f"* {fm_executor_env}/run_path" in captured.err
     assert "workflow.log" in captured.err
@@ -475,7 +491,7 @@ def test_print_failure_when_logs_found_in_rms_model(fm_executor_env, capsys):
         assert line.startswith("\t") is False
 
 
-def test_lm_license_server_overwritten_during_batch(fm_executor_env) -> None:
+def test_lm_license_server_overwritten_during_batch(fm_executor_env: Path) -> None:
     action = {"exit_status": 0}
     with open("run_path/action.json", "w") as f:
         f.write(json.dumps(action))

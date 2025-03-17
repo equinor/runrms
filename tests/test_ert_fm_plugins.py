@@ -2,11 +2,14 @@ import json
 import re
 import shutil
 import subprocess
+from collections.abc import Callable
+from pathlib import Path
 
 import pytest
+from pytest import MonkeyPatch
 
 try:
-    from ert.plugins.plugin_manager import ErtPluginManager
+    from ert.plugins.plugin_manager import ErtPluginManager  # type: ignore
 except ImportError:
     pytest.skip(
         "Not testing ERT plugins when ERT is not installed", allow_module_level=True
@@ -19,7 +22,7 @@ EXPECTED_JOBS = {"RMS"}
 
 
 @pytest.mark.requires_ert
-def test_that_installable_fm_steps_work_as_plugins():
+def test_that_installable_fm_steps_work_as_plugins() -> None:
     """Test that the forward models are included as ERT plugin."""
     fms = ErtPluginManager(plugins=[ert_plugins]).forward_model_steps
 
@@ -28,7 +31,7 @@ def test_that_installable_fm_steps_work_as_plugins():
 
 
 @pytest.mark.requires_ert
-def test_fm_plugin_implementations():
+def test_fm_plugin_implementations() -> None:
     """Test hook implementation."""
     ert_pm = ErtPluginManager(plugins=[ert_plugins])
 
@@ -41,7 +44,7 @@ def test_fm_plugin_implementations():
 
 @pytest.mark.requires_ert
 @pytest.mark.integration
-def test_fm_plugin_executables():
+def test_fm_plugin_executables() -> None:
     """Test executables in the configured ert forward models."""
     ert_pm = ErtPluginManager(plugins=[ert_plugins])
     for fm_step in ert_pm.forward_model_steps:
@@ -49,7 +52,7 @@ def test_fm_plugin_executables():
 
 
 @pytest.mark.requires_ert
-def test_fm_plugin_docs():
+def test_fm_plugin_docs() -> None:
     """For each installed forward model, we require the associated
     description and example string to be nonempty,
     and the category to be as expected"""
@@ -65,7 +68,9 @@ def test_fm_plugin_docs():
 
 
 @pytest.mark.requires_ert
-def test_rms_forward_model_ok(tmp_path, monkeypatch, fmu_snakeoil_project):
+def test_rms_forward_model_ok(
+    tmp_path: Path, monkeypatch: MonkeyPatch, fmu_snakeoil_project: None
+) -> None:
     """Test that when running ert with the given configuration file,
     the rms forward model runs rms with the given arguments"""
     monkeypatch.chdir(tmp_path / "ert/model")
@@ -83,8 +88,11 @@ def test_rms_forward_model_ok(tmp_path, monkeypatch, fmu_snakeoil_project):
 
 @pytest.mark.requires_ert
 def test_rms_forward_model_seed_invalid(
-    tmp_path, monkeypatch, fmu_snakeoil_project, create_multi_seed_file
-):
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    fmu_snakeoil_project: None,
+    create_multi_seed_file: Callable[[str], None],
+) -> None:
     """Test that when the seed file used by RMS has an invalid format,
     the validation leads to an aborted run"""
     monkeypatch.chdir(tmp_path / "ert/model")

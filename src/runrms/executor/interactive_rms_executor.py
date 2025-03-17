@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import datetime
 import getpass
 import logging
@@ -7,21 +5,18 @@ import platform
 import shutil
 import subprocess
 import time
-from typing import TYPE_CHECKING
 
 from runrms._utils import (
     BColors,
     xalert,
     xwarn,
 )
+from runrms.config.interactive_rms_config import (
+    InteractiveRMSConfig,
+)
 from runrms.version import __version__
 
 from ._rms_executor import RMSExecutor
-
-if TYPE_CHECKING:
-    from runrms.config.interactive_rms_config import (
-        InteractiveRMSConfig,
-    )
 
 logger = logging.getLogger(__name__)
 

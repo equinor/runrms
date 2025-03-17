@@ -1,31 +1,34 @@
-from __future__ import annotations
-
 import os
 import stat
+from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
+from typing import Any
 
 import pydantic
 import pytest
 import yaml
+from pytest import MonkeyPatch
 
 from runrms.__main__ import get_parser
 from runrms.config import DEFAULT_CONFIG_FILE
 from runrms.config._rms_config import (
     RMSConfig,
-    RMSConfigNotFoundError,
-    RMSExecutableError,
-    RMSVersionError,
-    RMSWrapperError,
     _load_site_config,
     _resolve_version,
 )
 from runrms.config._rms_project import RMSProject
 from runrms.config._site_config import SiteConfig
 from runrms.config.interactive_rms_config import InteractiveRMSConfig
+from runrms.exceptions import (
+    RMSConfigNotFoundError,
+    RMSExecutableError,
+    RMSVersionError,
+    RMSWrapperError,
+)
 
 
-def test_resolve_version(default_config_file) -> None:
+def test_resolve_version(default_config_file: dict[str, Any]) -> None:
     site_config = SiteConfig.model_validate(default_config_file)
     assert _resolve_version("14.2.1", site_config, None) == "14.2.1"
     assert _resolve_version("14.5.0", site_config, None) == "14.5.0"
@@ -40,7 +43,9 @@ def test_resolve_version(default_config_file) -> None:
         _resolve_version("latest", site_config, None)
 
 
-def test_resolve_version_from_project_master(default_config_file, executor_env):
+def test_resolve_version_from_project_master(
+    default_config_file: dict[str, Any], executor_env: Path
+) -> None:
     site_config = SiteConfig.model_validate(default_config_file)
     rms_project = RMSProject.from_filepath("project")
     version = _resolve_version(None, site_config, rms_project)
@@ -66,7 +71,7 @@ def test_resolve_version_from_project_master(default_config_file, executor_env):
         (DEFAULT_CONFIG_FILE, False),
     ],
 )
-def test_load_site_config(config_location, raises) -> None:
+def test_load_site_config(config_location: str, raises: bool) -> None:
     if not raises:
         _load_site_config(config_location)
     else:
@@ -74,11 +79,11 @@ def test_load_site_config(config_location, raises) -> None:
             _load_site_config(config_location)
 
 
-def test_valid_config(simple_runrms_config) -> None:
+def test_valid_config(simple_runrms_config: dict[str, Any]) -> None:
     SiteConfig.model_validate(simple_runrms_config)
 
 
-def test_invalid_default_version(simple_runrms_config) -> None:
+def test_invalid_default_version(simple_runrms_config: dict[str, Any]) -> None:
     simple_runrms_config["default"] = "./foo"
     with pytest.raises(pydantic.ValidationError, match="Default RMS version"):
         SiteConfig.model_validate(simple_runrms_config)
@@ -92,7 +97,7 @@ def test_init_rmsconfig_default() -> None:
     assert config.site_config.exe == config_yml["exe"]
 
 
-def test_init_rmsconfig_default_version(default_config_file) -> None:
+def test_init_rmsconfig_default_version(default_config_file: dict[str, Any]) -> None:
     config = RMSConfig()
     assert config.version == default_config_file["default"]
     assert str(config.site_config.exe) == default_config_file["exe"]
@@ -103,7 +108,9 @@ def test_init_rmsconfig_default_version(default_config_file) -> None:
 
 
 @pytest.mark.parametrize("version", ["14.2.2", "14.5.0"])
-def test_init_rmsconfig_given_version(default_config_file, version) -> None:
+def test_init_rmsconfig_given_version(
+    default_config_file: dict[str, Any], version: str
+) -> None:
     config = RMSConfig(version=version)
     assert config.version == version
     assert str(config.site_config.exe) == default_config_file["exe"]
@@ -114,7 +121,9 @@ def test_init_rmsconfig_given_version(default_config_file, version) -> None:
 
 
 def test_init_rmsconfig_nondefault_setup(
-    tmp_path, simple_runrms_yml, simple_runrms_config
+    tmp_path: Path,
+    simple_runrms_yml: Callable[[str | Path], str],
+    simple_runrms_config: dict[str, Any],
 ) -> None:
     """Tests that RMSConfig properly handles non-default runrms site configs."""
     runrms_yml = f"{tmp_path}/runrms.yml"
@@ -131,9 +140,9 @@ def test_init_rmsconfig_nondefault_setup(
 
 
 def test_rmsconfig_get_executable(
-    tmp_path,
-    monkeypatch,
-    simple_runrms_yml,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    simple_runrms_yml: Callable[[str | Path], str],
 ) -> None:
     """Tests that the wrapper functions correctly."""
     monkeypatch.chdir(tmp_path)
@@ -156,9 +165,9 @@ def test_rmsconfig_get_executable(
 
 
 def test_rmsconfig_get_wrapper(
-    tmp_path,
-    monkeypatch,
-    simple_runrms_yml,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    simple_runrms_yml: Callable[[str | Path], str],
 ) -> None:
     """Tests that the wrapper functions correctly."""
     monkeypatch.chdir(tmp_path)
@@ -180,9 +189,9 @@ def test_rmsconfig_get_wrapper(
 
 
 def test_rmsconfig_get_env(
-    tmp_path,
-    monkeypatch,
-    simple_runrms_yml,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+    simple_runrms_yml: Callable[[str | Path], str],
 ) -> None:
     """Tests that the wrapper functions correctly."""
     monkeypatch.chdir(tmp_path)
@@ -205,11 +214,11 @@ def test_rmsconfig_get_env(
     ],
 )
 def test_rmsconfig_with_v14_from_master_resolves_to_latest_patch(
-    project_version,
-    master_version,
-    expected_version,
-    tmp_path,
-    monkeypatch,
+    project_version: str,
+    master_version: str,
+    expected_version: str,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
 ) -> None:
     """Tests that if the .master file does not contain a patch version, as is the case
     in RMS 14.1, it will default to resolving to the latest patch version rather than

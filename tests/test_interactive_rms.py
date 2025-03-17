@@ -1,7 +1,5 @@
 """Test runrms script, but manual interactive testing is also needed."""
 
-from __future__ import annotations
-
 import datetime
 import getpass
 import os
@@ -12,6 +10,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pytest import MonkeyPatch
 
 from runrms.__main__ import get_parser
 from runrms.config import DEFAULT_CONFIG_FILE, InteractiveRMSConfig
@@ -21,7 +20,7 @@ TESTRMS1 = "tests/testdata/rms/drogon.rms12.0.2"
 TESTRMS2 = "tests/testdata/rms/drogon.rms13.0.3"
 
 
-def test_config_init_no_project():
+def test_config_init_no_project() -> None:
     args = get_parser().parse_args(["--dryrun", "--setup", DEFAULT_CONFIG_FILE])
     config = InteractiveRMSConfig(args)
     assert config.project is None
@@ -30,32 +29,36 @@ def test_config_init_no_project():
 
 
 @pytest.mark.parametrize("project", [TESTRMS1, TESTRMS2])
-def test_config_init_projects(source_root, project):
+def test_config_init_projects(source_root: Path, project: str) -> None:
     project_str = str(source_root / project)
     args = get_parser().parse_args(
         [project_str, "--dryrun", "--setup", DEFAULT_CONFIG_FILE]
     )
     config = InteractiveRMSConfig(args)
+    assert config.project is not None
     assert config.project.path == source_root / project
     assert config.dryrun is True
     assert config.site_config_file == DEFAULT_CONFIG_FILE
 
 
 @pytest.mark.integration
-def test_integration():
+def test_integration() -> None:
     """Test that the endpoint is installed."""
     assert subprocess.check_output(["runrms", "-h"])
 
 
-def test_rms_version_from_project(source_root, tmp_path):
+def test_rms_version_from_project(source_root: Path, tmp_path: Path) -> None:
     """Scan master files in RMS."""
     os.chdir(tmp_path)
     args = get_parser().parse_args([str(source_root / TESTRMS1)])
     config = InteractiveRMSConfig(args)
+    assert config.project is not None
     assert config.project.master.version == "12.0.2"
 
 
-def test_runlogger_writes_to_configured_usage_log(source_root, tmp_path):
+def test_runlogger_writes_to_configured_usage_log(
+    source_root: Path, tmp_path: Path
+) -> None:
     """Tests that the 'interactive_usage_log' site configuration options works."""
     os.chdir(tmp_path)
     runrms_usage = Path(tmp_path / "runrms_usage.log").resolve()
@@ -100,7 +103,7 @@ def test_runlogger_writes_to_configured_usage_log(source_root, tmp_path):
 
 
 @pytest.mark.xfail(reason="The executable disable_komodo_exec is not available")
-def test_runrms_disable_komodo_exec(tmp_path, monkeypatch):
+def test_runrms_disable_komodo_exec(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     """Testing integration with Komodo."""
     os.chdir(tmp_path)
     Path("rms_fake").write_text(
@@ -154,11 +157,12 @@ sys.exit(0)
     args = get_parser().parse_args(["-v", "13.0.3"])
     config = InteractiveRMSConfig(args)
 
-    config.path_prefix = "/some/bin/path"
-    config.version_requested = "13.0.3"
-    config.exe = "./rms_fake"
-    config.pythonpath = ""
-    config.pluginspath = "rms/plugins/path"
+    # FIXME: What are these supposed to set?
+    # config.path_prefix = "/some/bin/path"
+    # config.version_requested = "13.0.3"
+    # config.exe = "./rms_fake"
+    # config.pythonpath = ""
+    # config.pluginspath = "rms/plugins/path"
 
     executor = InteractiveRMSExecutor(config)
 

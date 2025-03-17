@@ -1,21 +1,17 @@
-from __future__ import annotations
-
 import glob
 import os
 import subprocess
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
+from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING
 
-from ._rms_executor import RMSExecutor, RMSRuntimeError
+from runrms.config.fm_rms_config import FMRMSConfig
+from runrms.exceptions import RMSRuntimeError
 
-if TYPE_CHECKING:
-    from collections.abc import Generator
-    from pathlib import Path
-
-    from runrms.config.fm_rms_config import FMRMSConfig
+from ._rms_executor import RMSExecutor
 
 
 @contextmanager

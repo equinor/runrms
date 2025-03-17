@@ -1,13 +1,8 @@
-from __future__ import annotations
-
 from pathlib import Path
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
 from packaging.version import parse as version_parse
 from pydantic import BaseModel, Field, model_validator
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class Env(BaseModel):

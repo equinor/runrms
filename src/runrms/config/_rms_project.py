@@ -1,12 +1,8 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
 
-
-class RMSProjectNotFoundError(OSError):
-    """Raised when attempting to open an RMS project that does not exist."""
+from runrms.exceptions import RMSProjectNotFoundError
 
 
 @dataclass
@@ -112,7 +108,7 @@ class RMSProject:
         return self.path.name
 
     @classmethod
-    def from_filepath(cls, project: str) -> RMSProject:
+    def from_filepath(cls, project: str) -> "RMSProject":
         project_path = Path(project)
         if not project_path.is_dir():
             raise RMSProjectNotFoundError(

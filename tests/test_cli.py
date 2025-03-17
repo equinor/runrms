@@ -1,17 +1,23 @@
 import sys
 from argparse import ArgumentError
+from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
 from runrms.__main__ import generate_config, get_parser, main
 
 
-def test_empty_invocation(executor_env, patch_argv) -> None:
+def test_empty_invocation(
+    executor_env: Path, patch_argv: Callable[[list[str]], None]
+) -> None:
     patch_argv(["--setup", "runrms.yml"])
     main()
 
 
-def test_invalid_batch_invocations(executor_env, patch_argv) -> None:
+def test_invalid_batch_invocations(
+    executor_env: Path, patch_argv: Callable[[list[str]], None]
+) -> None:
     patch_argv(["--setup", "runrms.yml", "--seed", "123"])
     with pytest.raises(ArgumentError, match="must be combined with --batch"):
         main()

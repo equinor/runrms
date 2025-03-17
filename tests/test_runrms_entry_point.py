@@ -1,13 +1,8 @@
-from __future__ import annotations
-
 import subprocess
 import sys
-from typing import TYPE_CHECKING
+from pathlib import Path
 
-if TYPE_CHECKING:
-    from pathlib import Path
-
-    from pytest import MonkeyPatch
+from pytest import MonkeyPatch
 
 
 def test_entry_point(
