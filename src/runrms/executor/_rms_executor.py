@@ -1,7 +1,15 @@
 import os
 from abc import ABC, abstractmethod
+from enum import StrEnum
 
 from runrms.config import FMRMSConfig, InteractiveRMSConfig
+
+
+class RMSExecutionMode(StrEnum):
+    """The modes RMS can execute in."""
+
+    interactive = "interactive"
+    batch = "batch"
 
 
 class RMSExecutor(ABC):
@@ -27,6 +35,7 @@ class RMSExecutor(ABC):
         }
         # Overwrite the global env if there are conflicts.
         config_env.update(version_env)
+        config_env["RUNRMS_EXEC_MODE"] = self.exec_mode.value
         return config_env
 
     @property
@@ -36,12 +45,19 @@ class RMSExecutor(ABC):
     def update_exec_env(self, key: str, val: str) -> None:
         """Updates the environment variable with name `key` in the
         execution environment of RMS with the value `val`."""
+
+        # Do not update these variables.
+        if key in ("RUNRMS_EXEC_MODE"):
+            return
+
+        # Path prepend these variables.
         if key in ("PATH", "LD_LIBRARY_PATH"):
             self._exec_env[key] = f"{val}{os.pathsep}{self._exec_env[key]}"
-        else:
-            self._exec_env[key] = val
-            if not self._exec_env[key].strip():
-                self._exec_env.pop(key)
+            return
+
+        self._exec_env[key] = val
+        if not self._exec_env[key].strip():
+            self._exec_env.pop(key)
 
     def pre_rms_args(self) -> list[str]:
         """The rms exec environement needs to be injected between executing the
@@ -53,6 +69,11 @@ class RMSExecutor(ABC):
             if self.config.wrapper is not None
             else env_args
         )
+
+    @property
+    def exec_mode(self) -> RMSExecutionMode:
+        """The mode a derived class is executing in."""
+        raise NotImplementedError
 
     @abstractmethod
     def run(self) -> int:

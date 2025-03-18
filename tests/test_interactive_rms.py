@@ -2,11 +2,13 @@
 
 import datetime
 import getpass
+import json
 import os
+import shutil
 import socket
-import stat
 import subprocess
 from pathlib import Path
+from unittest.mock import PropertyMock, patch
 
 import pytest
 import yaml
@@ -102,69 +104,37 @@ def test_runlogger_writes_to_configured_usage_log(
     assert len(log_lines) == 2
 
 
-@pytest.mark.xfail(reason="The executable disable_komodo_exec is not available")
-def test_runrms_disable_komodo_exec(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+def test_interactive_run(
+    tmp_path: Path, monkeypatch: MonkeyPatch, source_root: Path
+) -> None:
     """Testing integration with Komodo."""
     os.chdir(tmp_path)
-    Path("rms_fake").write_text(
-        """\
-#!/usr/bin/env python3
-import os
-import sys
+    shutil.copy(source_root / "tests/bin/rms", tmp_path)
 
-errors = []
+    action = {"exit_status": 0}
+    with open("action.json", "w") as f:
+        f.write(json.dumps(action))
 
-BACKUPS_check=set([
-    "PATH",
-    "KOMODO_RELEASE",
-    "MANPATH",
-    "LD_LIBRARY_PATH",
-    "PYTHONPATH"
-])
-BACKUPS = set(os.environ["BACKUPS"].split(":"))
+    args = get_parser().parse_args(["-v", "14.2.2"])
+    with (
+        patch.object(
+            InteractiveRMSConfig,
+            "wrapper",
+            new_callable=PropertyMock,
+            return_value="REPLACE_WRAPPER_WITH=env_var",
+        ),
+        patch.object(
+            InteractiveRMSConfig,
+            "executable",
+            new_callable=PropertyMock,
+            return_value=str(tmp_path / "rms"),
+        ),
+    ):
+        config = InteractiveRMSConfig(args)
+        executor = InteractiveRMSExecutor(config)
+        assert executor.run() == 0
 
-if BACKUPS != BACKUPS_check:
-    errors.append(f"BACKUP error: {BACKUPS} not equal to {BACKUPS_check}")
+    with open("env.json") as f:
+        env = json.load(f)
 
-for backup in BACKUPS:
-    if f"{backup}_BACKUP" not in os.environ:
-        errors.append(f"The backup for {backup} is not set")
-
-PATH = os.environ["PATH"]
-PATH_PREFIX = os.environ["PATH_PREFIX"]
-if PATH.split(":")[0] != PATH_PREFIX:
-    errors.append(f"PATH_PREFIX ({PATH_PREFIX}), was not prepended to PATH ({PATH})")
-if PATH_PREFIX != "/some/bin/path":
-    errors.append(f"The path for run_external is not corrent {PATH_PREFIX}")
-
-if "KOMODO_RELEASE" in os.environ:
-    errors.append(f"komodo release set: {os.environ['KOMODO_RELEASE']}")
-
-if errors:
-    for e in errors:
-        print(e)
-    sys.exit(1)
-sys.exit(0)
-"""
-    )
-
-    st = os.stat("rms_fake")
-    os.chmod("rms_fake", st.st_mode | stat.S_IEXEC)
-    monkeypatch.setenv("KOMODO_RELEASE", f"{os.getcwd()}/bleeding")
-    monkeypatch.setenv("_PRE_KOMODO_MANPATH", "some/man/path")
-    monkeypatch.setenv("_PRE_KOMODO_LD_LIBRARY_PATH", "some/ld/path")
-
-    args = get_parser().parse_args(["-v", "13.0.3"])
-    config = InteractiveRMSConfig(args)
-
-    # FIXME: What are these supposed to set?
-    # config.path_prefix = "/some/bin/path"
-    # config.version_requested = "13.0.3"
-    # config.exe = "./rms_fake"
-    # config.pythonpath = ""
-    # config.pluginspath = "rms/plugins/path"
-
-    executor = InteractiveRMSExecutor(config)
-
-    return_code = executor.run()
-    assert return_code == 0
+    assert env["RUNRMS_EXEC_MODE"] == "interactive"

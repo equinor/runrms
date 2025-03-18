@@ -11,7 +11,7 @@ from textwrap import dedent
 from runrms.config.fm_rms_config import FMRMSConfig
 from runrms.exceptions import RMSRuntimeError
 
-from ._rms_executor import RMSExecutor
+from ._rms_executor import RMSExecutionMode, RMSExecutor
 
 
 @contextmanager
@@ -122,6 +122,11 @@ class FMRMSExecutor(RMSExecutor):
             fail_msg += "\n".join([f"* {f}" for f in log_files])
 
         print(fail_msg, file=sys.stderr)
+
+    @property
+    def exec_mode(self) -> RMSExecutionMode:
+        """Executing in batch mode."""
+        return RMSExecutionMode.batch
 
     def run(self) -> int:
         """Main executor entry point."""

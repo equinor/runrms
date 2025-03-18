@@ -6,17 +6,11 @@ import shutil
 import subprocess
 import time
 
-from runrms._utils import (
-    BColors,
-    xalert,
-    xwarn,
-)
-from runrms.config.interactive_rms_config import (
-    InteractiveRMSConfig,
-)
+from runrms._utils import BColors, xalert, xwarn
+from runrms.config.interactive_rms_config import InteractiveRMSConfig
 from runrms.version import __version__
 
-from ._rms_executor import RMSExecutor
+from ._rms_executor import RMSExecutionMode, RMSExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +70,11 @@ class InteractiveRMSExecutor(RMSExecutor):
         rms_process = subprocess.run(pre_args + args, check=True)
         print(BColors.ENDC)
         return rms_process.returncode
+
+    @property
+    def exec_mode(self) -> RMSExecutionMode:
+        """Executing in interacting mode."""
+        return RMSExecutionMode.interactive
 
     def run(self) -> int:
         """Main executor function"""
