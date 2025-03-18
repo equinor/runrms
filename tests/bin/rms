@@ -5,14 +5,16 @@ import json
 import os
 import sys
 import time
+from pathlib import Path
+from typing import Any
 
-config = {"exit_status": 0}
+config: dict[str, Any] = {"exit_status": 0}
 if os.path.isfile("action.json"):
     with open("action.json", encoding="utf-8") as f:
         config = json.load(f)
 
 
-def write_target_file(target_file):
+def write_target_file(target_file: str | Path) -> None:
     with open(target_file, "w") as f:
         f.write(f"this is the target file {time.time()}\n")
 
@@ -40,13 +42,14 @@ if "target_file" in config:
 with open("env.json", "w") as f:
     env = {}
     for key in (
+        "LM_LICENSE_FILE",
         "PATH",
+        "PYTHONPATH",
         "RMS_PLUGINS_LIBRARY",
         "RMS_TEST_VAR",
-        "PYTHONPATH",
-        "LM_LICENSE_FILE",
-        "_PRE_RMS_PYTHONPATH",
+        "RUNRMS_EXEC_MODE",
         "_PRE_RMS_BACKUP",
+        "_PRE_RMS_PYTHONPATH",
     ):
         if key in os.environ:
             env[key] = os.environ[key]

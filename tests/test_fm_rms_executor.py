@@ -513,3 +513,27 @@ def test_lm_license_server_overwritten_during_batch(fm_executor_env: Path) -> No
         env = json.load(f)
 
     assert env["LM_LICENSE_FILE"] == "/license/file.lic"
+
+
+def test_runrms_exec_mode_set_during_batch(fm_executor_env: Path) -> None:
+    action = {"exit_status": 0}
+    with open("run_path/action.json", "w") as f:
+        f.write(json.dumps(action))
+
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        version="14.2.2",
+        config_file="runrms.yml",
+    )
+
+    rms = FMRMSExecutor(config)
+    assert rms.run() == 0
+
+    with open("run_path/env.json") as f:
+        env = json.load(f)
+
+    assert env["RUNRMS_EXEC_MODE"] == "batch"
