@@ -4,11 +4,10 @@ import stat
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
-from pytest_mock import MockerFixture
 
 from runrms.config import FMRMSConfig
 from runrms.exceptions import RMSRuntimeError
@@ -261,7 +260,6 @@ def test_run_version_env(
 def test_license_file_from_wrapper_overwrites(
     test_env_wrapper: Callable[..., str],
     fm_executor_env: Path,
-    mocker: MockerFixture,
     monkeypatch: MonkeyPatch,
 ) -> None:
     """Tests that the the batch license file configuration is preferred. This is set by
@@ -298,7 +296,6 @@ def test_license_file_from_wrapper_overwrites(
 def test_user_rms_plugins_library_env_var_is_not_preferred(
     test_env_wrapper: Callable[..., str],
     fm_executor_env: Path,
-    mocker: MockerFixture,
     monkeypatch: MonkeyPatch,
 ) -> None:
     """Tests that if a user sets the RMS_PLUGINS_LIBRARY environment variable in their
@@ -314,7 +311,7 @@ def test_user_rms_plugins_library_env_var_is_not_preferred(
         )
         f.write(disable_foo)
 
-    mocker.patch("sys.argv", ["bin/rms"])
+    patch("sys.argv", ["bin/rms"])
     action = {
         "exit_status": 0,
         "target_file": os.path.join(fm_executor_env, "some_file"),
