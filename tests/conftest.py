@@ -10,7 +10,6 @@ from typing import Any
 import pytest
 import yaml
 from pytest import FixtureRequest, MonkeyPatch
-from pytest_mock import MockerFixture
 
 from runrms.config import DEFAULT_CONFIG_FILE
 
@@ -212,14 +211,6 @@ def simple_runrms_config(
     simple_runrms_yml: Callable[[str | Path], str],
 ) -> dict[str, str]:
     return yaml.safe_load(simple_runrms_yml("."))
-
-
-@pytest.fixture
-def patch_argv(mocker: MockerFixture) -> Callable[[list[str]], None]:
-    def _patch_argv(options: list[str]) -> None:
-        mocker.patch("sys.argv", ["runrms"] + options)
-
-    return _patch_argv
 
 
 def master_version() -> str:
