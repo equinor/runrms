@@ -77,7 +77,7 @@ def _resolve_version(
 
         raise RMSVersionError(
             f"RMS version '{rms_project.master.version}' "
-            "configured in the RMS project is not supported."
+            "configured in the RMS project is not supported. "
             "To see the supported versions, run `rms -l` or `runrms -l`."
         )
 
