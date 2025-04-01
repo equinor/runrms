@@ -37,6 +37,10 @@ def _sanitize_version(version: str) -> str:
     if numdots == 0:
         return f"{version}.0.0"
     if numdots == 1:
+        # TODO: Remove this hack _if_ RMS
+        # can get its versioning act together.
+        if version == "14.5":
+            return version
         return f"{version}.0"
     return version
 
