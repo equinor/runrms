@@ -31,7 +31,7 @@ from runrms.exceptions import (
 def test_resolve_version(default_config_file: dict[str, Any]) -> None:
     site_config = SiteConfig.model_validate(default_config_file)
     assert _resolve_version("14.2.1", site_config, None) == "14.2.1"
-    assert _resolve_version("14.5.0", site_config, None) == "14.5.0"
+    assert _resolve_version("14.5", site_config, None) == "14.5"
     assert _resolve_version(None, site_config, None) == "14.2.2"
 
     with pytest.raises(
@@ -107,7 +107,7 @@ def test_init_rmsconfig_default_version(default_config_file: dict[str, Any]) -> 
     )
 
 
-@pytest.mark.parametrize("version", ["14.2.2", "14.5.0"])
+@pytest.mark.parametrize("version", ["14.2.2", "14.5"])
 def test_init_rmsconfig_given_version(
     default_config_file: dict[str, Any], version: str
 ) -> None:
@@ -210,7 +210,7 @@ def test_rmsconfig_get_env(
         ("14.2.1", "V14.2", "14.2.2"),
         ("14.2.2", "V14.2", "14.2.2"),
         ("14.2.1", "V14.2", "14.2.2"),
-        ("14.5.0", "V14.5", "14.5.0"),
+        ("14.5", "V14.5", "14.5"),
     ],
 )
 def test_rmsconfig_with_v14_from_master_resolves_to_latest_patch(
