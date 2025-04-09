@@ -44,3 +44,9 @@ versions:
       RMS_PLUGINS_LIBRARY: /opt/rms/14.5/site/plugins
       TCL_LIBRARY: /opt/rms/14.5/lib/tcl8.6
       TK_LIBRARY: /opt/rms/14.5/lib/tcl8.6
+  14.5.0.1:
+    env:
+      PYTHONPATH: /opt/rms/14.5.0.1/site/lib/python3.11/site-packages
+      RMS_PLUGINS_LIBRARY: /opt/rms/14.5.0.1/site/plugins
+      TCL_LIBRARY: /opt/rms/14.5.0.1/lib/tcl8.6
+      TK_LIBRARY: /opt/rms/14.5.0.1/lib/tcl8.6

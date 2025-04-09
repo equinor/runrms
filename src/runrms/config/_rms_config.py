@@ -65,17 +65,12 @@ def _resolve_version(
         )
     if rms_project:
         if rms_project.master.version in site_config.versions:
-            # Handle RMS 14.5 specially as it stores no patch version whatsoever,
-            # whereas RMS 14.2 at least stored it via rmsapi. This is technically RMS
-            # 14.5.0 but RMS is currently unable to provide consistent versioning.
-            if rms_project.master.version == "14.5":
-                return rms_project.master.version
-
             master_version = version_parse(rms_project.master.version)
-            major, minor, patch = master_version.release
+            major = master_version.major
+            minor = master_version.minor
 
-            # Handle RMS 14 specially as it stores no patch version internally.
-            if major == 14:
+            # Handle RMS 14.2 specially as it stores no patch version internally.
+            if major == 14 and minor <= 2:
                 newest_patch = site_config.get_newest_patch_version(major, minor)
                 return f"{major}.{minor}.{newest_patch}"
 
