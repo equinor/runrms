@@ -3,6 +3,7 @@ from ert import (  # type: ignore
     ForwardModelStepJSON,
     ForwardModelStepPlugin,
     ForwardModelStepValidationError,
+    ForwardModelStepWarning,
     plugin,
 )
 
@@ -54,6 +55,17 @@ class Rms(ForwardModelStepPlugin):  # type: ignore
         ok, err = FMRMSConfig._pre_experiment_validation()
         if not ok:
             raise ForwardModelStepValidationError(f"FMRMSConfig: {err}")
+
+        if "<RMS_PYTHONPATH>" in self.private_args:
+            ForwardModelStepWarning.warn(
+                "Remove unused option <RMS_PYTHONPATH> from your RMS step "
+                "configuration. It has no effect."
+            )
+        if "<RMS_PATH_PREFIX>" in self.private_args:
+            ForwardModelStepWarning.warn(
+                "Remove unused option <RMS_PATH_PREFIX> from your RMS step "
+                "configuration. It has no effect."
+            )
 
     @staticmethod
     def documentation() -> ForwardModelStepDocumentation | None:
