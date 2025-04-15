@@ -67,18 +67,5 @@ class Rms(ForwardModelStepPlugin):  # type: ignore
 
 
 @plugin(name="runrms")  # type: ignore
-def forward_model_configuration() -> dict[str, dict[str, str]]:
-    """These exist for backward compatibility.
-
-    If `RMS_PYTHONPATH` is set to a non-existing path it can fail."""
-    return {
-        Rms().name: {
-            "RMS_PYTHONPATH": "<RMS_PYTHONPATH>",
-            "RMS_PATH_PREFIX": "<RMS_PATH_PREFIX>",
-        }
-    }
-
-
-@plugin(name="runrms")  # type: ignore
 def installable_forward_model_steps() -> list[ForwardModelStepPlugin]:
     return [Rms]
