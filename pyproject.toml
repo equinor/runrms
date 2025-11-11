@@ -27,7 +27,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "ert>=10.2",
+    "packaging",
     "pydantic",
     "pyyaml",
     "pyzmq",
@@ -38,6 +38,7 @@ runrms = ["config/runrms.yml"]
 
 [project.optional-dependencies]
 dev = [
+    "ert>=10.2",
     "mypy",
     "pytest",
     "pytest-cov",
