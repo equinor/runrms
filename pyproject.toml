@@ -30,6 +30,7 @@ dependencies = [
     "ert>=10.2",
     "pydantic",
     "pyyaml",
+    "pyzmq",
 ]
 
 [tool.setuptools.package-data]
