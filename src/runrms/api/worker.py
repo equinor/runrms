@@ -12,14 +12,11 @@ import signal
 import sys
 import traceback
 from pathlib import Path
-from types import FrameType
-from typing import TYPE_CHECKING, Any, Final, Literal, Self
+from types import FrameType, ModuleType
+from typing import Any, Final, Literal, Self
 
 import zmq
 from pydantic import BaseModel
-
-if TYPE_CHECKING:
-    from types import ModuleType
 
 
 class ProxyRef(BaseModel):
@@ -253,13 +250,35 @@ class ApiWorker:
         setattr(obj, path[-1], value)
 
     def _make_response(self, result: Any) -> Response:
-        """Create response, storing non-pickleable objects and returning a ProxyRef."""
+        """Create response, storing non-pickleable objects and returning a ProxyRef.
+
+        This handles a few issues around pickling:
+
+        - If pickling fails on the result, it is returned as a ProxyRef.
+        - Pickled can succeed, but contain a reference to '_rmsapi' or 'rmsapi'. Python
+          will attempt to re-assemble it on the client side, but fail because those
+          packages do not exist there. So check the module name and create a ProxyRef if
+          so, by raising an exception that is caught.
+        """
+        result_type = type(result)
+        module_name = result_type.__module__
+
         try:
             pickle.dumps(result)
+
+            if module_name and module_name.startswith(("rmsapi", "_rmsapi")):
+                raise TypeError("Cannot unpickle on client side")
+
             response = Response(success=True, value=result)
             response.serialize()  # Ensure it can be serialized
             return response
-        except (RuntimeError, pickle.PicklingError, TypeError, AttributeError):
+        except (
+            AttributeError,
+            ModuleNotFoundError,
+            RuntimeError,
+            TypeError,
+            pickle.PicklingError,
+        ):
             obj_id = str(self.next_id)
             self.object_store[obj_id] = result
 
