@@ -24,9 +24,14 @@ def zmq_address(tmp_path: Path) -> str:
 
 def send_request(socket: zmq.Socket[bytes], request: Request) -> Response:
     """Helper to send request and receive response."""
-    socket.send(request.serialize())
-    response_data = socket.recv()
-    return Response.deserialize(response_data)
+    try:
+        socket.send(request.serialize())
+        response_data = socket.recv()
+        return Response.deserialize(response_data)
+    except zmq.Again as e:
+        raise TimeoutError("No response received") from e
+    except Exception as e:
+        raise RuntimeError(f"Communcation error: {e}") from e
 
 
 def test_ping(worker: Popen[bytes], client: zmq.Socket[bytes]) -> None:
