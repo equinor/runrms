@@ -139,7 +139,6 @@ class RmsApiProxy:
 
             self._socket.send(request_data)
             response_data = self._socket.recv()
-            print(response_data)
 
             logger.debug(f"Received response ({len(response_data)} bytes)")
             response = Response.deserialize(response_data)
