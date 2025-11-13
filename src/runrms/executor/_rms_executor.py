@@ -2,7 +2,7 @@ import os
 from abc import ABC, abstractmethod
 from enum import StrEnum
 
-from runrms.config import FMRMSConfig, InteractiveRMSConfig
+from runrms.config import ApiRmsConfig, FMRMSConfig, InteractiveRMSConfig
 
 
 class RMSExecutionMode(StrEnum):
@@ -10,6 +10,7 @@ class RMSExecutionMode(StrEnum):
 
     interactive = "interactive"
     batch = "batch"
+    api = "api"
 
 
 class RMSExecutor(ABC):
@@ -17,7 +18,9 @@ class RMSExecutor(ABC):
     Executor class which should be used by all runrms executors
     """
 
-    def __init__(self, config: InteractiveRMSConfig | FMRMSConfig) -> None:
+    def __init__(
+        self, config: InteractiveRMSConfig | FMRMSConfig | ApiRmsConfig
+    ) -> None:
         self._config = config
         self._exec_env = self._init_exec_env()
 
@@ -39,7 +42,7 @@ class RMSExecutor(ABC):
         return config_env
 
     @property
-    def config(self) -> InteractiveRMSConfig | FMRMSConfig:
+    def config(self) -> InteractiveRMSConfig | FMRMSConfig | ApiRmsConfig:
         return self._config
 
     def update_exec_env(self, key: str, val: str) -> None:
@@ -51,7 +54,7 @@ class RMSExecutor(ABC):
             return
 
         # Path prepend these variables.
-        if key in ("PATH", "LD_LIBRARY_PATH"):
+        if key in ("PATH", "LD_LIBRARY_PATH") and key in self._exec_env:
             self._exec_env[key] = f"{val}{os.pathsep}{self._exec_env[key]}"
             return
 
