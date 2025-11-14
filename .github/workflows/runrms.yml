@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Install Ubuntu dependencies
@@ -55,16 +55,16 @@ jobs:
 
       - name: Ruff check
         if: ${{ always() }}
-        run: uv ruff check
+        run: uv run ruff check
 
       - name: Ruff format
         if: ${{ always() }}
-        run: uv ruff format --check
+        run: uv run ruff format --check
 
       - name: Check typing with mypy
         if: ${{ always() }}
-        run: uv mypy src tests
+        run: uv run mypy src tests
 
       - name: Run tests
         if: ${{ always() }}
-        run: uv pytest -n auto tests -m "not onprem" --cov --cov-report term-missing
+        run: uv run pytest -n auto tests -m "not onprem" --cov --cov-report term-missing
