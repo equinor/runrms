@@ -15,12 +15,10 @@ from ._rms_executor import RmsExecutionMode, RmsExecutor
 logger = logging.getLogger(__name__)
 
 
-class InteractiveExecutor(RmsExecutor):
+class InteractiveExecutor(RmsExecutor[InteractiveConfig]):
     """
     Class for executing runrms in interactive mode
     """
-
-    config: InteractiveConfig
 
     def _handle_locked_project(self) -> None:
         """Do action if project is locked."""

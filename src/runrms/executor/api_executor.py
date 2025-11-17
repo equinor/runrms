@@ -17,7 +17,7 @@ from ._rms_executor import RmsExecutionMode, RmsExecutor
 logger = null_logger(__name__)
 
 
-class ApiExecutor(RmsExecutor):
+class ApiExecutor(RmsExecutor[ApiConfig]):
     """Executor for RMS API mode."""
 
     def __init__(
