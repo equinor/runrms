@@ -2,9 +2,9 @@ import argparse
 import subprocess
 import sys
 
-from .config import FMRMSConfig, InteractiveRMSConfig
+from .config import ForwardModelConfig, InteractiveConfig
 from .exceptions import UnknownConfigError
-from .executor import FMRMSExecutor, InteractiveRMSExecutor
+from .executor import ForwardModelExecutor, InteractiveExecutor
 
 try:
     from .version import __version__
@@ -188,27 +188,27 @@ def get_parser() -> argparse.ArgumentParser:
     return prs
 
 
-def generate_config(args: argparse.Namespace) -> FMRMSConfig | InteractiveRMSConfig:
+def generate_config(args: argparse.Namespace) -> ForwardModelConfig | InteractiveConfig:
     """
-    Generate a RMSConfig object based on the given args
+    Generate a RmsConfig object based on the given args
     """
 
     if args.iens is None:
-        return InteractiveRMSConfig(args)
-    return FMRMSConfig(args)
+        return InteractiveConfig(args)
+    return ForwardModelConfig(args)
 
 
 def generate_executor(
-    config: FMRMSConfig | InteractiveRMSConfig,
-) -> InteractiveRMSExecutor | FMRMSExecutor:
+    config: ForwardModelConfig | InteractiveConfig,
+) -> InteractiveExecutor | ForwardModelExecutor:
     """
-    Generate a RMSExecutor object based on the given RMSConfig
+    Generate a RmsExecutor object based on the given RmsConfig
     """
 
-    if isinstance(config, InteractiveRMSConfig):
-        return InteractiveRMSExecutor(config)
-    if isinstance(config, FMRMSConfig):
-        return FMRMSExecutor(config)
+    if isinstance(config, InteractiveConfig):
+        return InteractiveExecutor(config)
+    if isinstance(config, ForwardModelConfig):
+        return ForwardModelExecutor(config)
 
     raise UnknownConfigError(
         f"Unable to generate executor for config of type {type(config)}"

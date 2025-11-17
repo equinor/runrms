@@ -2,10 +2,10 @@
 
 from runrms.api.worker import ApiWorker
 
-from ._rms_config import RMSConfig
+from ._rms_config import RmsConfig
 
 
-class ApiRmsConfig(RMSConfig):
+class ApiConfig(RmsConfig):
     """Configuration for launching RMS in API mode."""
 
     def __init__(

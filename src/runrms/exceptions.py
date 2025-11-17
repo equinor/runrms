@@ -1,4 +1,4 @@
-class RMSRuntimeError(Exception):
+class RmsRuntimeError(Exception):
     """
     Custom error for run-time errors
     """
@@ -10,26 +10,26 @@ class UnknownConfigError(Exception):
     """
 
 
-class RMSProjectNotFoundError(OSError):
+class RmsProjectNotFoundError(OSError):
     """Raised when attempting to open an RMS project that does not exist."""
 
 
-class RMSConfigError(ValueError):
+class RmsConfigError(ValueError):
     """Raised when the configuration file is errorneous."""
 
 
-class RMSConfigNotFoundError(FileNotFoundError):
+class RmsConfigNotFoundError(FileNotFoundError):
     """Raised when attempting to open a site configuration that does not exist."""
 
 
-class RMSExecutableError(OSError):
+class RmsExecutableError(OSError):
     """Raised when the RMS executable cannot be executed, either because it's
     not found or because of invalid user access to it."""
 
 
-class RMSWrapperError(FileNotFoundError):
+class RmsWrapperError(FileNotFoundError):
     """Raised when the RMS wrapper cannot be found."""
 
 
-class RMSVersionError(ValueError):
+class RmsVersionError(ValueError):
     """Raised when the given rms version does not exist."""

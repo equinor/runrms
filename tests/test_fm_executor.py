@@ -9,9 +9,9 @@ from unittest.mock import Mock, patch
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
 
-from runrms.config import FMRMSConfig
-from runrms.exceptions import RMSRuntimeError
-from runrms.executor import FMRMSExecutor
+from runrms.config import ForwardModelConfig
+from runrms.exceptions import RmsRuntimeError
+from runrms.executor import ForwardModelExecutor
 
 
 def _create_config(  # noqa: PLR0913 Too many arguments in function definition (8 > 5)
@@ -23,7 +23,7 @@ def _create_config(  # noqa: PLR0913 Too many arguments in function definition (
     config_file: str,
     version: str = "14.2.2",
     target_file: str | None = None,
-) -> FMRMSConfig:
+) -> ForwardModelConfig:
     args = Mock()
     args.iens = iens
     args.run_path = run_path
@@ -38,7 +38,7 @@ def _create_config(  # noqa: PLR0913 Too many arguments in function definition (
     args.setup = config_file
     args.threads = 1
 
-    config = FMRMSConfig(args)
+    config = ForwardModelConfig(args)
     config._site_config.exe = f"{os.getcwd()}/bin/rms"
     return config
 
@@ -56,7 +56,7 @@ def test_run_class(fm_executor_env: Path, capsys: CaptureFixture[str]) -> None:
         allow_no_env=True,
         config_file="runrms.yml",
     )
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 0
 
     # -----------------------------------------------------------------
@@ -91,8 +91,8 @@ def test_run_class(fm_executor_env: Path, capsys: CaptureFixture[str]) -> None:
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
-    with pytest.raises(RMSRuntimeError) as e:
+    rms = ForwardModelExecutor(config)
+    with pytest.raises(RmsRuntimeError) as e:
         assert rms.run() == 0
         assert e.match("target-file")
 
@@ -115,7 +115,7 @@ def test_run_class(fm_executor_env: Path, capsys: CaptureFixture[str]) -> None:
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 0
 
 
@@ -141,7 +141,7 @@ def test_run_class_with_existing_target_file(fm_executor_env: Path) -> None:
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 0
 
 
@@ -171,7 +171,7 @@ def test_run_wrapper(
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 0
 
     # -----------------------------------------------------------------
@@ -202,8 +202,8 @@ def test_run_wrapper(
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
-    with pytest.raises(RMSRuntimeError):
+    rms = ForwardModelExecutor(config)
+    with pytest.raises(RmsRuntimeError):
         rms.run()
 
     # -----------------------------------------------------------------
@@ -253,7 +253,7 @@ def test_run_version_env(
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 0
 
 
@@ -288,7 +288,7 @@ def test_license_file_from_wrapper_overwrites(
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 1
     assert rms._exec_env.get("LM_LICENSE_FILE", False) == "/license/file.lic"
 
@@ -329,7 +329,7 @@ def test_user_rms_plugins_library_env_var_is_not_preferred(
         target_file="some_file",
         config_file="runrms.yml",
     )
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
 
     assert rms.run() == 0
     assert rms._exec_env.get("RMS_PLUGINS_LIBRARY", False) == "/foo/plugins"
@@ -357,8 +357,8 @@ def test_run_allow_no_env(fm_executor_env: Path, monkeypatch: MonkeyPatch) -> No
     )
 
     config._version_given = "non-existing"
-    rms = FMRMSExecutor(config)
-    with pytest.raises(RMSRuntimeError, match="non-existing"):
+    rms = ForwardModelExecutor(config)
+    with pytest.raises(RmsRuntimeError, match="non-existing"):
         assert rms.run() == 0
 
     config = _create_config(
@@ -372,7 +372,7 @@ def test_run_allow_no_env(fm_executor_env: Path, monkeypatch: MonkeyPatch) -> No
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 0
 
 
@@ -440,7 +440,7 @@ def test_print_failure_when_no_logs_found_in_rms_model(
         allow_no_env=True,
         config_file="runrms.yml",
     )
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == exit_status
 
     captured = capsys.readouterr()
@@ -475,7 +475,7 @@ def test_print_failure_when_logs_found_in_rms_model(
     (fm_executor_env / "run_path" / "2025_RMS.log").touch()
     (fm_executor_env / "run_path" / "workflow.log").touch()
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 1
 
     captured = capsys.readouterr()
@@ -503,7 +503,7 @@ def test_lm_license_server_overwritten_during_batch(fm_executor_env: Path) -> No
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 0
 
     with open("run_path/env.json") as f:
@@ -527,7 +527,7 @@ def test_runrms_exec_mode_set_during_batch(fm_executor_env: Path) -> None:
         config_file="runrms.yml",
     )
 
-    rms = FMRMSExecutor(config)
+    rms = ForwardModelExecutor(config)
     assert rms.run() == 0
 
     with open("run_path/env.json") as f:

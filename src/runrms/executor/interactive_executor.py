@@ -7,20 +7,20 @@ import subprocess
 import time
 
 from runrms._utils import BColors, xalert, xwarn
-from runrms.config.interactive_rms_config import InteractiveRMSConfig
+from runrms.config import InteractiveConfig
 from runrms.version import __version__
 
-from ._rms_executor import RMSExecutionMode, RMSExecutor
+from ._rms_executor import RmsExecutionMode, RmsExecutor
 
 logger = logging.getLogger(__name__)
 
 
-class InteractiveRMSExecutor(RMSExecutor):
+class InteractiveExecutor(RmsExecutor):
     """
     Class for executing runrms in interactive mode
     """
 
-    config: InteractiveRMSConfig
+    config: InteractiveConfig
 
     def _handle_locked_project(self) -> None:
         """Do action if project is locked."""
@@ -72,9 +72,9 @@ class InteractiveRMSExecutor(RMSExecutor):
         return rms_process.returncode
 
     @property
-    def exec_mode(self) -> RMSExecutionMode:
+    def exec_mode(self) -> RmsExecutionMode:
         """Executing in interacting mode."""
-        return RMSExecutionMode.interactive
+        return RmsExecutionMode.interactive
 
     def run(self) -> int:
         """Main executor function"""

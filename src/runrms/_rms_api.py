@@ -5,7 +5,7 @@ from typing import Any
 
 from ._logging import null_logger
 from .api import RmsApiProxy
-from .config import ApiRmsConfig
+from .config import ApiConfig
 from .executor import ApiExecutor
 
 logger = null_logger(__name__)
@@ -29,7 +29,7 @@ def get_executor(
 
     logger.info(f"Creating RMS API executor for version {version}")
 
-    config = ApiRmsConfig(
+    config = ApiConfig(
         project=project,
         config_path=config_path,
         version=version,

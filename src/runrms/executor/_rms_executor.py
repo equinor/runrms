@@ -2,10 +2,10 @@ import os
 from abc import ABC, abstractmethod
 from enum import StrEnum
 
-from runrms.config import ApiRmsConfig, FMRMSConfig, InteractiveRMSConfig
+from runrms.config import ApiConfig, ForwardModelConfig, InteractiveConfig
 
 
-class RMSExecutionMode(StrEnum):
+class RmsExecutionMode(StrEnum):
     """The modes RMS can execute in."""
 
     interactive = "interactive"
@@ -13,13 +13,13 @@ class RMSExecutionMode(StrEnum):
     api = "api"
 
 
-class RMSExecutor(ABC):
+class RmsExecutor(ABC):
     """
     Executor class which should be used by all runrms executors
     """
 
     def __init__(
-        self, config: InteractiveRMSConfig | FMRMSConfig | ApiRmsConfig
+        self, config: InteractiveConfig | ForwardModelConfig | ApiConfig
     ) -> None:
         self._config = config
         self._exec_env = self._init_exec_env()
@@ -42,7 +42,7 @@ class RMSExecutor(ABC):
         return config_env
 
     @property
-    def config(self) -> InteractiveRMSConfig | FMRMSConfig | ApiRmsConfig:
+    def config(self) -> InteractiveConfig | ForwardModelConfig | ApiConfig:
         return self._config
 
     def update_exec_env(self, key: str, val: str) -> None:
@@ -74,7 +74,7 @@ class RMSExecutor(ABC):
         )
 
     @property
-    def exec_mode(self) -> RMSExecutionMode:
+    def exec_mode(self) -> RmsExecutionMode:
         """The mode a derived class is executing in."""
         raise NotImplementedError
 

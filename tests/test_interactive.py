@@ -15,8 +15,8 @@ import yaml
 from pytest import MonkeyPatch
 
 from runrms.__main__ import get_parser
-from runrms.config import DEFAULT_CONFIG_FILE, InteractiveRMSConfig
-from runrms.executor import InteractiveRMSExecutor
+from runrms.config import DEFAULT_CONFIG_FILE, InteractiveConfig
+from runrms.executor import InteractiveExecutor
 
 TESTRMS1 = "tests/testdata/rms/drogon.rms12.0.2"
 TESTRMS2 = "tests/testdata/rms/drogon.rms13.0.3"
@@ -24,7 +24,7 @@ TESTRMS2 = "tests/testdata/rms/drogon.rms13.0.3"
 
 def test_config_init_no_project() -> None:
     args = get_parser().parse_args(["--dryrun", "--setup", DEFAULT_CONFIG_FILE])
-    config = InteractiveRMSConfig(args)
+    config = InteractiveConfig(args)
     assert config.project is None
     assert config.dryrun is True
     assert config.site_config_file == DEFAULT_CONFIG_FILE
@@ -36,7 +36,7 @@ def test_config_init_projects(source_root: Path, project: str) -> None:
     args = get_parser().parse_args(
         [project_str, "--dryrun", "--setup", DEFAULT_CONFIG_FILE]
     )
-    config = InteractiveRMSConfig(args)
+    config = InteractiveConfig(args)
     assert config.project is not None
     assert config.project.path == source_root / project
     assert config.dryrun is True
@@ -53,7 +53,7 @@ def test_rms_version_from_project(source_root: Path, tmp_path: Path) -> None:
     """Scan master files in RMS."""
     os.chdir(tmp_path)
     args = get_parser().parse_args([str(source_root / TESTRMS1)])
-    config = InteractiveRMSConfig(args)
+    config = InteractiveConfig(args)
     assert config.project is not None
     assert config.project.master.version == "12.0.2"
 
@@ -80,8 +80,8 @@ def test_runlogger_writes_to_configured_usage_log(
     args = get_parser().parse_args(
         [str(source_root / TESTRMS1), "--setup", f"{tmp_path}/runrms.yml"]
     )
-    config = InteractiveRMSConfig(args)
-    executor = InteractiveRMSExecutor(config)
+    config = InteractiveConfig(args)
+    executor = InteractiveExecutor(config)
     executor._exec_rms()
     executor.runlogger()
     with open(runrms_usage, encoding="utf-8") as f:
@@ -118,20 +118,20 @@ def test_interactive_run(
     args = get_parser().parse_args(["-v", "14.2.2"])
     with (
         patch.object(
-            InteractiveRMSConfig,
+            InteractiveConfig,
             "wrapper",
             new_callable=PropertyMock,
             return_value="REPLACE_WRAPPER_WITH=env_var",
         ),
         patch.object(
-            InteractiveRMSConfig,
+            InteractiveConfig,
             "executable",
             new_callable=PropertyMock,
             return_value=str(tmp_path / "rms"),
         ),
     ):
-        config = InteractiveRMSConfig(args)
-        executor = InteractiveRMSExecutor(config)
+        config = InteractiveConfig(args)
+        executor = InteractiveExecutor(config)
         assert executor.run() == 0
 
     with open("env.json") as f:

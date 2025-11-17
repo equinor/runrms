@@ -10,19 +10,19 @@ from uuid import uuid4
 
 from runrms._logging import null_logger
 from runrms.api import RmsApiProxy
-from runrms.config import ApiRmsConfig
+from runrms.config import ApiConfig
 
-from ._rms_executor import RMSExecutionMode, RMSExecutor
+from ._rms_executor import RmsExecutionMode, RmsExecutor
 
 logger = null_logger(__name__)
 
 
-class ApiExecutor(RMSExecutor):
+class ApiExecutor(RmsExecutor):
     """Executor for RMS API mode."""
 
     def __init__(
         self,
-        config: ApiRmsConfig,
+        config: ApiConfig,
         zmq_address: str | None = None,
         startup_timeout: float = 2.0,
         ping_retries: int = 10,
@@ -79,8 +79,8 @@ class ApiExecutor(RMSExecutor):
         return self._zmq_address
 
     @property
-    def exec_mode(self) -> RMSExecutionMode:
-        return RMSExecutionMode.api
+    def exec_mode(self) -> RmsExecutionMode:
+        return RmsExecutionMode.api
 
     @property
     def is_running(self) -> bool:

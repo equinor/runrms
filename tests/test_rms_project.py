@@ -5,11 +5,11 @@ import pytest
 from pytest import MonkeyPatch
 
 from runrms.config._rms_project import (
-    RMSProject,
+    RmsProject,
     _parse_master_file_header,
     _sanitize_version,
 )
-from runrms.exceptions import RMSProjectNotFoundError
+from runrms.exceptions import RmsProjectNotFoundError
 
 
 @pytest.mark.parametrize(
@@ -30,8 +30,8 @@ def test_make_rmsproject_with_nonexistent_project_dir(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
     monkeypatch.chdir(tmp_path)
-    with pytest.raises(RMSProjectNotFoundError, match="does not exist as a directory"):
-        RMSProject.from_filepath("notreal")
+    with pytest.raises(RmsProjectNotFoundError, match="does not exist as a directory"):
+        RmsProject.from_filepath("notreal")
 
 
 def test_make_rmsproject_with_project_dir_as_file(
@@ -39,8 +39,8 @@ def test_make_rmsproject_with_project_dir_as_file(
 ) -> None:
     monkeypatch.chdir(tmp_path)
     Path("notreal").touch()
-    with pytest.raises(RMSProjectNotFoundError, match="does not exist as a directory"):
-        RMSProject.from_filepath("notreal")
+    with pytest.raises(RmsProjectNotFoundError, match="does not exist as a directory"):
+        RmsProject.from_filepath("notreal")
 
 
 def test_make_rmsproject_without_master_file(
@@ -49,7 +49,7 @@ def test_make_rmsproject_without_master_file(
     monkeypatch.chdir(tmp_path)
     Path("notreal").mkdir()
     with pytest.raises(FileNotFoundError, match="RMS project .master file not found"):
-        RMSProject.from_filepath("notreal")
+        RmsProject.from_filepath("notreal")
 
 
 def test_rmsproject_parses_correct_master(source_root: Path) -> None:
@@ -65,7 +65,7 @@ def test_rmsproject_parses_correct_master(source_root: Path) -> None:
 
 def test_make_rmsproject_without_lock(source_root: Path) -> None:
     drogon_master = source_root / "tests/testdata/rms/drogon.rms13.0.3"
-    rmsproject = RMSProject.from_filepath(str(drogon_master))
+    rmsproject = RmsProject.from_filepath(str(drogon_master))
     assert rmsproject.path == drogon_master
     assert rmsproject.name == "drogon.rms13.0.3"
     assert rmsproject.locked is False
@@ -90,7 +90,7 @@ def test_make_rmsproject_with_lock(
         "Locked by abc on s6.st.so.no with process id (pid) 123 at 2037.03.14 09:00:00"
     )
     Path("project_lock_file").write_text(lock_txt)
-    rmsproject = RMSProject.from_filepath(str(test_path))
+    rmsproject = RmsProject.from_filepath(str(test_path))
     assert rmsproject.path == test_path
     assert rmsproject.name == "drogon.rms13.0.3"
     assert rmsproject.locked is True

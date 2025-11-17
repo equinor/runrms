@@ -7,8 +7,8 @@ from ert import (  # type: ignore
     plugin,
 )
 
-from runrms.config.fm_rms_config import (
-    FMRMSConfig,
+from runrms.config.fm_config import (
+    ForwardModelConfig,
     description,
     examples,
 )
@@ -52,9 +52,9 @@ class Rms(ForwardModelStepPlugin):  # type: ignore
         return fm_step_json
 
     def validate_pre_experiment(self, fm_step_json: ForwardModelStepJSON) -> None:
-        ok, err = FMRMSConfig._pre_experiment_validation()
+        ok, err = ForwardModelConfig._pre_experiment_validation()
         if not ok:
-            raise ForwardModelStepValidationError(f"FMRMSConfig: {err}")
+            raise ForwardModelStepValidationError(f"ForwardModelConfig: {err}")
 
         if "<RMS_PYTHONPATH>" in self.private_args:
             ForwardModelStepWarning.warn(

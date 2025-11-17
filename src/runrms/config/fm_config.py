@@ -4,10 +4,10 @@ import os
 import random
 from pathlib import Path
 
-from runrms.exceptions import RMSRuntimeError
+from runrms.exceptions import RmsRuntimeError
 
-from ._rms_config import RMSConfig
-from ._rms_project import RMSProject
+from ._rms_config import RmsConfig
+from ._rms_project import RmsProject
 
 logger = logging.getLogger(__name__)
 
@@ -43,12 +43,12 @@ RMS is usually incorporated in ERT configurations using statements like
 category = "modelling.reservoir"
 
 
-class FMRMSConfig(RMSConfig):
+class ForwardModelConfig(RmsConfig):
     """A class which holds the nessecary configuration for executing
     runrms as a forward model.
     """
 
-    project: RMSProject
+    project: RmsProject
 
     _single_seed_file = "RMS_SEED"
     _multi_seed_file = "random.seeds"
@@ -57,7 +57,7 @@ class FMRMSConfig(RMSConfig):
 
     def __init__(self, args: argparse.Namespace) -> None:
         if not args.project:
-            raise RMSRuntimeError(
+            raise RmsRuntimeError(
                 "A project must be specified to run the RMS forward model."
             )
         super().__init__(
@@ -159,7 +159,7 @@ class FMRMSConfig(RMSConfig):
                 seed = int(seed_list[self._iens + 1])
         else:
             random.seed()
-            seed = random.randint(0, FMRMSConfig._max_seed)
+            seed = random.randint(0, ForwardModelConfig._max_seed)
         return seed
 
     @staticmethod
@@ -167,21 +167,21 @@ class FMRMSConfig(RMSConfig):
         num_realizations: int | None = None,
     ) -> tuple[bool, ValueError | None]:
         seed_path = Path(os.getcwd(), "../input/distributions")
-        single_seed_file = seed_path / FMRMSConfig._single_seed_file
-        multi_seed_file = seed_path / FMRMSConfig._multi_seed_file
+        single_seed_file = seed_path / ForwardModelConfig._single_seed_file
+        multi_seed_file = seed_path / ForwardModelConfig._multi_seed_file
         iens_max = num_realizations - 1 if num_realizations is not None else None
 
         try:
             if single_seed_file.exists():
                 with open(single_seed_file) as file_handle:
                     seed_list = [line.rstrip() for line in file_handle]
-                    FMRMSConfig._validate_seed_source(
+                    ForwardModelConfig._validate_seed_source(
                         seed_list, single_seed_file, False, iens_max
                     )
             elif multi_seed_file.exists():
                 with open(multi_seed_file) as file_handle:
                     seed_list = [line.rstrip() for line in file_handle]
-                    FMRMSConfig._validate_seed_source(
+                    ForwardModelConfig._validate_seed_source(
                         seed_list, multi_seed_file, True, iens_max
                     )
         except ValueError as err:
