@@ -25,12 +25,10 @@ def pushd(path: str | Path) -> Generator[None, None, None]:
         os.chdir(cwd_)
 
 
-class ForwardModelExecutor(RmsExecutor):
+class ForwardModelExecutor(RmsExecutor[ForwardModelConfig]):
     """
     Class for executing runrms as forward model job
     """
-
-    config: ForwardModelConfig
 
     def __init__(self, config: ForwardModelConfig) -> None:
         super().__init__(config)

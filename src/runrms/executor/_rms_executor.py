@@ -1,8 +1,11 @@
 import os
 from abc import ABC, abstractmethod
 from enum import StrEnum
+from typing import Generic, TypeVar
 
-from runrms.config import ApiConfig, ForwardModelConfig, InteractiveConfig
+from runrms.config._rms_config import RmsConfig
+
+ConfigType = TypeVar("ConfigType", bound=RmsConfig)
 
 
 class RmsExecutionMode(StrEnum):
@@ -13,14 +16,12 @@ class RmsExecutionMode(StrEnum):
     api = "api"
 
 
-class RmsExecutor(ABC):
+class RmsExecutor(ABC, Generic[ConfigType]):
     """
     Executor class which should be used by all runrms executors
     """
 
-    def __init__(
-        self, config: InteractiveConfig | ForwardModelConfig | ApiConfig
-    ) -> None:
+    def __init__(self, config: ConfigType) -> None:
         self._config = config
         self._exec_env = self._init_exec_env()
 
@@ -42,7 +43,7 @@ class RmsExecutor(ABC):
         return config_env
 
     @property
-    def config(self) -> InteractiveConfig | ForwardModelConfig | ApiConfig:
+    def config(self) -> ConfigType:
         return self._config
 
     def update_exec_env(self, key: str, val: str) -> None:
