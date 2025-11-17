@@ -291,6 +291,8 @@ class ApiWorker:
         try:
             if not api_object:
                 import rmsapi  # type: ignore[import-not-found] # noqa: PLC0415 top of file
+                import rmsapi.jobs  # type: ignore[import-not-found] # noqa: PLC0415 top of file
+                import rmsapi.rms  # type: ignore[import-not-found] # noqa: PLC0415 top of file
 
                 self.api_object = rmsapi
             else:
