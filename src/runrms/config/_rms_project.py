@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
 
-from runrms.exceptions import RMSProjectNotFoundError
+from runrms.exceptions import RmsProjectNotFoundError
 
 
 @dataclass
@@ -101,7 +101,7 @@ def _parse_master_file_header(filepath: Path) -> RMSMaster:
 
 
 @dataclass
-class RMSProject:
+class RmsProject:
     path: Path
     locked: bool
     lockfile: str | None
@@ -112,10 +112,10 @@ class RMSProject:
         return self.path.name
 
     @classmethod
-    def from_filepath(cls, project: str) -> "RMSProject":
+    def from_filepath(cls, project: str) -> "RmsProject":
         project_path = Path(project)
         if not project_path.is_dir():
-            raise RMSProjectNotFoundError(
+            raise RmsProjectNotFoundError(
                 f"The project: {project_path} does not exist as a directory."
             )
 

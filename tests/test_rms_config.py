@@ -11,20 +11,19 @@ import yaml
 from pytest import MonkeyPatch
 
 from runrms.__main__ import get_parser
-from runrms.config import DEFAULT_CONFIG_FILE
+from runrms.config import DEFAULT_CONFIG_FILE, InteractiveConfig
 from runrms.config._rms_config import (
-    RMSConfig,
+    RmsConfig,
     _load_site_config,
     _resolve_version,
 )
-from runrms.config._rms_project import RMSProject
+from runrms.config._rms_project import RmsProject
 from runrms.config._site_config import SiteConfig
-from runrms.config.interactive_rms_config import InteractiveRMSConfig
 from runrms.exceptions import (
-    RMSConfigNotFoundError,
-    RMSExecutableError,
-    RMSVersionError,
-    RMSWrapperError,
+    RmsConfigNotFoundError,
+    RmsExecutableError,
+    RmsVersionError,
+    RmsWrapperError,
 )
 
 
@@ -36,11 +35,11 @@ def test_resolve_version(default_config_file: dict[str, Any]) -> None:
     assert _resolve_version(None, site_config, None) == "14.2.2"
 
     with pytest.raises(
-        RMSVersionError, match="RMS version '123.4.5' is not supported."
+        RmsVersionError, match="RMS version '123.4.5' is not supported."
     ):
         _resolve_version("123.4.5", site_config, None)
 
-    with pytest.raises(RMSVersionError, match="RMS version 'latest' is not supported."):
+    with pytest.raises(RmsVersionError, match="RMS version 'latest' is not supported."):
         _resolve_version("latest", site_config, None)
 
 
@@ -48,7 +47,7 @@ def test_resolve_version_from_project_master(
     default_config_file: dict[str, Any], executor_env: Path
 ) -> None:
     site_config = SiteConfig.model_validate(default_config_file)
-    rms_project = RMSProject.from_filepath("project")
+    rms_project = RmsProject.from_filepath("project")
     version = _resolve_version(None, site_config, rms_project)
     assert version == "14.2.2"
 
@@ -58,7 +57,7 @@ def test_resolve_version_from_project_master(
 
     rms_project.master.version = "10.0.0"
     with pytest.raises(
-        RMSVersionError,
+        RmsVersionError,
         match="RMS version '10.0.0' configured in the RMS project is not supported.",
     ):
         _resolve_version(None, site_config, rms_project)
@@ -76,7 +75,7 @@ def test_load_site_config(config_location: str, raises: bool) -> None:
     if not raises:
         _load_site_config(config_location)
     else:
-        with pytest.raises(RMSConfigNotFoundError, match="Unable to locate"):
+        with pytest.raises(RmsConfigNotFoundError, match="Unable to locate"):
             _load_site_config(config_location)
 
 
@@ -93,13 +92,13 @@ def test_invalid_default_version(simple_runrms_config: dict[str, Any]) -> None:
 def test_init_rmsconfig_default() -> None:
     with open(DEFAULT_CONFIG_FILE, encoding="utf-8") as f:
         config_yml = yaml.safe_load(f)
-    config = RMSConfig()
+    config = RmsConfig()
     assert config.version == config_yml["default"]
     assert config.site_config.exe == config_yml["exe"]
 
 
 def test_init_rmsconfig_default_version(default_config_file: dict[str, Any]) -> None:
-    config = RMSConfig()
+    config = RmsConfig()
     assert config.version == default_config_file["default"]
     assert str(config.site_config.exe) == default_config_file["exe"]
     assert (
@@ -112,7 +111,7 @@ def test_init_rmsconfig_default_version(default_config_file: dict[str, Any]) -> 
 def test_init_rmsconfig_given_version(
     default_config_file: dict[str, Any], version: str
 ) -> None:
-    config = RMSConfig(version=version)
+    config = RmsConfig(version=version)
     assert config.version == version
     assert str(config.site_config.exe) == default_config_file["exe"]
     assert (
@@ -126,12 +125,12 @@ def test_init_rmsconfig_nondefault_setup(
     simple_runrms_yml: Callable[[str | Path], str],
     simple_runrms_config: dict[str, Any],
 ) -> None:
-    """Tests that RMSConfig properly handles non-default runrms site configs."""
+    """Tests that RmsConfig properly handles non-default runrms site configs."""
     runrms_yml = f"{tmp_path}/runrms.yml"
     with open(runrms_yml, "w", encoding="utf-8") as f:
         f.write(simple_runrms_yml("."))
 
-    config = RMSConfig(config_path=runrms_yml)
+    config = RmsConfig(config_path=runrms_yml)
     assert config.version == "14.2.2"
     assert str(config.site_config.exe) == simple_runrms_config["exe"]
     assert (
@@ -150,15 +149,15 @@ def test_rmsconfig_get_executable(
     exe_path = tmp_path / "bin"
     with open("runrms.yml", "w", encoding="utf-8") as f:
         f.write(simple_runrms_yml(exe_path))
-    config = RMSConfig(config_path="runrms.yml")
-    with pytest.raises(RMSExecutableError, match=f"{exe_path}/rms cannot be found"):
+    config = RmsConfig(config_path="runrms.yml")
+    with pytest.raises(RmsExecutableError, match=f"{exe_path}/rms cannot be found"):
         _ = config.executable
 
     os.mkdir("bin")
     with open("bin/rms", "w", encoding="utf-8") as f:
         f.write("#!/bin/bash\necho 1")
 
-    with pytest.raises(RMSExecutableError, match=f"{exe_path}/rms cannot be found"):
+    with pytest.raises(RmsExecutableError, match=f"{exe_path}/rms cannot be found"):
         _ = config.executable
 
     os.chmod("bin/rms", stat.S_IEXEC)
@@ -174,8 +173,8 @@ def test_rmsconfig_get_wrapper(
     monkeypatch.chdir(tmp_path)
     with open("runrms.yml", "w", encoding="utf-8") as f:
         f.write(simple_runrms_yml(tmp_path))
-    config = RMSConfig(config_path="runrms.yml")
-    with pytest.raises(RMSWrapperError, match="disable_foo cannot be found"):
+    config = RmsConfig(config_path="runrms.yml")
+    with pytest.raises(RmsWrapperError, match="disable_foo cannot be found"):
         _ = config.wrapper
 
     disable_foo = Path("disable_foo")
@@ -198,7 +197,7 @@ def test_rmsconfig_get_env(
     monkeypatch.chdir(tmp_path)
     with open("runrms.yml", "w", encoding="utf-8") as f:
         f.write(simple_runrms_yml(tmp_path))
-    config = RMSConfig(config_path="runrms.yml")
+    config = RmsConfig(config_path="runrms.yml")
     assert config.global_env.PATH_PREFIX == "/foo/bin"
     assert config.env.PYTHONPATH == "/foo/bar/site-packages"
 
@@ -253,5 +252,5 @@ def test_rmsconfig_with_v14_from_master_resolves_to_latest_patch(
         )
 
     args = get_parser().parse_args([project])
-    config = InteractiveRMSConfig(args)
+    config = InteractiveConfig(args)
     assert config.version == expected_version

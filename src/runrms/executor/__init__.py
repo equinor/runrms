@@ -1,9 +1,9 @@
-from .api_rms_executor import ApiExecutor
-from .fm_rms_executor import FMRMSExecutor
-from .interactive_rms_executor import InteractiveRMSExecutor
+from .api_executor import ApiExecutor
+from .fm_executor import ForwardModelExecutor
+from .interactive_executor import InteractiveExecutor
 
 __all__ = [
     "ApiExecutor",
-    "FMRMSExecutor",
-    "InteractiveRMSExecutor",
+    "ForwardModelExecutor",
+    "InteractiveExecutor",
 ]

@@ -9,13 +9,13 @@ import yaml
 from packaging.version import parse as version_parse
 
 from runrms.exceptions import (
-    RMSConfigNotFoundError,
-    RMSExecutableError,
-    RMSVersionError,
-    RMSWrapperError,
+    RmsConfigNotFoundError,
+    RmsExecutableError,
+    RmsVersionError,
+    RmsWrapperError,
 )
 
-from ._rms_project import RMSProject
+from ._rms_project import RmsProject
 from ._site_config import Env, GlobalEnv, SiteConfig, Version
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ def _detect_os() -> str:
 
 def _load_site_config(site_config_file: str) -> SiteConfig:
     if not os.path.exists(site_config_file):
-        raise RMSConfigNotFoundError(
+        raise RmsConfigNotFoundError(
             f"Unable to locate config file for rms\n{site_config_file} does not exist!"
         )
     with open(site_config_file) as f:
@@ -54,12 +54,12 @@ def _load_site_config(site_config_file: str) -> SiteConfig:
 
 
 def _resolve_version(
-    version: str | None, site_config: SiteConfig, rms_project: RMSProject | None
+    version: str | None, site_config: SiteConfig, rms_project: RmsProject | None
 ) -> str:
     if version:
         if version in site_config.versions:
             return version
-        raise RMSVersionError(
+        raise RmsVersionError(
             f"RMS version '{version}' is not supported. "
             "To see the supported versions, run `rms -l` or `runrms -l`."
         )
@@ -76,7 +76,7 @@ def _resolve_version(
 
             return rms_project.master.version
 
-        raise RMSVersionError(
+        raise RmsVersionError(
             f"RMS version '{rms_project.master.version}' "
             "configured in the RMS project is not supported. "
             "To see the supported versions, run `rms -l` or `runrms -l`."
@@ -85,9 +85,9 @@ def _resolve_version(
     return site_config.default
 
 
-class RMSConfig:
+class RmsConfig:
     """
-    Common config class for all RMSConfigs used by runrms
+    Common config class for all RmsConfigs used by runrms
     """
 
     def __init__(
@@ -102,7 +102,7 @@ class RMSConfig:
 
         self._site_config_file = self._set_config_file(config_path)
         self._site_config = _load_site_config(self._site_config_file)
-        self._project = RMSProject.from_filepath(project) if project else None
+        self._project = RmsProject.from_filepath(project) if project else None
 
         self._version_given = version
         self._version = _resolve_version(version, self._site_config, self._project)
@@ -141,7 +141,7 @@ class RMSConfig:
         return self._site_config
 
     @property
-    def project(self) -> RMSProject | None:
+    def project(self) -> RmsProject | None:
         return self._project
 
     @property
@@ -161,9 +161,9 @@ class RMSConfig:
         """RMS executable, assert if permissions are correct"""
         exe = self._site_config.exe
         if shutil.which(exe) is None:
-            raise RMSExecutableError(f"The executable: {exe} cannot be found")
+            raise RmsExecutableError(f"The executable: {exe} cannot be found")
         if not os.access(exe, os.X_OK):
-            raise RMSExecutableError(
+            raise RmsExecutableError(
                 f"The executable: {exe} cannot be run (invalid access)"
             )
         return exe
@@ -173,7 +173,7 @@ class RMSConfig:
         """wrapper executable, assert if permissions are correct"""
         exe = self._site_config.wrapper
         if shutil.which(exe) is None:
-            raise RMSWrapperError(f"The executable: {exe} cannot be found")
+            raise RmsWrapperError(f"The executable: {exe} cannot be found")
         return exe
 
     @property

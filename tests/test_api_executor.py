@@ -7,14 +7,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from runrms.api import RmsApiProxy
-from runrms.config import ApiRmsConfig
+from runrms.config import ApiConfig
 from runrms.executor import ApiExecutor
 
 
 @pytest.fixture
-def mock_config() -> ApiRmsConfig:
+def mock_config() -> ApiConfig:
     """Create a mock API RMS config."""
-    config = ApiRmsConfig(version="14.2.2")
+    config = ApiConfig(version="14.2.2")
     config.site_config.batch_lm_license_file = None
     return config
 
@@ -28,7 +28,7 @@ def mock_exec_env() -> dict[str, str]:
     }
 
 
-def test_generate_zmq_address(mock_config: ApiRmsConfig) -> None:
+def test_generate_zmq_address(mock_config: ApiConfig) -> None:
     """Generated ZMQ address is unique and follows expected format."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -39,7 +39,7 @@ def test_generate_zmq_address(mock_config: ApiRmsConfig) -> None:
         assert address.endswith(".sock")
 
 
-def test_custom_zmq_address_is_used(mock_config: ApiRmsConfig) -> None:
+def test_custom_zmq_address_is_used(mock_config: ApiConfig) -> None:
     """Custom zmq address is used when provided."""
     custom_address = "ipc:///tmp/custom.sock"
     with patch.object(ApiExecutor, "_setup_rms_environment"):
@@ -48,7 +48,7 @@ def test_custom_zmq_address_is_used(mock_config: ApiRmsConfig) -> None:
     assert executor.zmq_address == custom_address
 
 
-def test_exec_mode_is_api(mock_config: ApiRmsConfig) -> None:
+def test_exec_mode_is_api(mock_config: ApiConfig) -> None:
     """Executor reports correct execution mode."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -56,7 +56,7 @@ def test_exec_mode_is_api(mock_config: ApiRmsConfig) -> None:
     assert executor.exec_mode.value == "api"
 
 
-def test_is_running_false_when_no_worker(mock_config: ApiRmsConfig) -> None:
+def test_is_running_false_when_no_worker(mock_config: ApiConfig) -> None:
     """is_running is False when no worker process exists."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -64,7 +64,7 @@ def test_is_running_false_when_no_worker(mock_config: ApiRmsConfig) -> None:
     assert executor.is_running is False
 
 
-def test_is_running_false_when_worker_terminated(mock_config: ApiRmsConfig) -> None:
+def test_is_running_false_when_worker_terminated(mock_config: ApiConfig) -> None:
     """is_running is False when worker has terminated."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -74,7 +74,7 @@ def test_is_running_false_when_worker_terminated(mock_config: ApiRmsConfig) -> N
     assert executor.is_running is False
 
 
-def test_is_running_true_when_worker_active(mock_config: ApiRmsConfig) -> None:
+def test_is_running_true_when_worker_active(mock_config: ApiConfig) -> None:
     """is_running is True when worker is active."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -84,9 +84,7 @@ def test_is_running_true_when_worker_active(mock_config: ApiRmsConfig) -> None:
     assert executor.is_running is True
 
 
-def test_build_command(
-    mock_config: ApiRmsConfig, mock_exec_env: dict[str, str]
-) -> None:
+def test_build_command(mock_config: ApiConfig, mock_exec_env: dict[str, str]) -> None:
     """Command is built correctly from config and env."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -102,7 +100,7 @@ def test_build_command(
         assert cmd[-1] == executor.zmq_address
 
 
-def test_run_starts_worker_once(mock_config: ApiRmsConfig) -> None:
+def test_run_starts_worker_once(mock_config: ApiConfig) -> None:
     """run() starts the worker process only once."""
     with (
         patch.object(ApiExecutor, "_setup_rms_environment"),
@@ -123,7 +121,7 @@ def test_run_starts_worker_once(mock_config: ApiRmsConfig) -> None:
         assert proxy1 is proxy2
 
 
-def test_run_creates_proxy_once(mock_config: ApiRmsConfig) -> None:
+def test_run_creates_proxy_once(mock_config: ApiConfig) -> None:
     """run() starts the worker process only once."""
     with (
         patch.object(ApiExecutor, "_setup_rms_environment"),
@@ -143,7 +141,7 @@ def test_run_creates_proxy_once(mock_config: ApiRmsConfig) -> None:
     assert mock_create_proxy.call_count == 1
 
 
-def test_shutdown_sends_shutdown_to_proxy(mock_config: ApiRmsConfig) -> None:
+def test_shutdown_sends_shutdown_to_proxy(mock_config: ApiConfig) -> None:
     """shutdown() sends shutdown request to proxy."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -157,7 +155,7 @@ def test_shutdown_sends_shutdown_to_proxy(mock_config: ApiRmsConfig) -> None:
         mock_proxy._cleanup.assert_called_once()
 
 
-def test_shutdown_cleans_up_on_proxy_error(mock_config: ApiRmsConfig) -> None:
+def test_shutdown_cleans_up_on_proxy_error(mock_config: ApiConfig) -> None:
     """shutdown() cleans up proxy if shutdown request fails."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -171,7 +169,7 @@ def test_shutdown_cleans_up_on_proxy_error(mock_config: ApiRmsConfig) -> None:
         mock_proxy._cleanup.assert_called_once()
 
 
-def test_shutdown_terminates_worker(mock_config: ApiRmsConfig) -> None:
+def test_shutdown_terminates_worker(mock_config: ApiConfig) -> None:
     """shutdown() terminates the worker process."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -187,7 +185,7 @@ def test_shutdown_terminates_worker(mock_config: ApiRmsConfig) -> None:
         mock_process.wait.assert_called()
 
 
-def test_shutdown_kills_worker_on_timeout(mock_config: ApiRmsConfig) -> None:
+def test_shutdown_kills_worker_on_timeout(mock_config: ApiConfig) -> None:
     """shutdown() kills worker if termination times out."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config)
@@ -206,9 +204,7 @@ def test_shutdown_kills_worker_on_timeout(mock_config: ApiRmsConfig) -> None:
         mock_process.kill.assert_called_once()
 
 
-def def_shutdown_cleans_up_socket_file(
-    mock_config: ApiRmsConfig, tmp_path: Path
-) -> None:
+def def_shutdown_cleans_up_socket_file(mock_config: ApiConfig, tmp_path: Path) -> None:
     """shutdown() removes the socket file."""
     socket_path = tmp_path / "test.sock"
     socket_path.touch()
@@ -221,7 +217,7 @@ def def_shutdown_cleans_up_socket_file(
         assert not socket_path.exists()
 
 
-def test_shutdown_handles_missing_socket_file(mock_config: ApiRmsConfig) -> None:
+def test_shutdown_handles_missing_socket_file(mock_config: ApiConfig) -> None:
     """shutdown() handles missing socket file gracefully."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config, zmq_address="ipc:///tmp/nonexistent.sock")
@@ -229,7 +225,7 @@ def test_shutdown_handles_missing_socket_file(mock_config: ApiRmsConfig) -> None
         executor.shutdown()  # should not raise
 
 
-def test_zmq_address_raises_after_shutdown(mock_config: ApiRmsConfig) -> None:
+def test_zmq_address_raises_after_shutdown(mock_config: ApiConfig) -> None:
     """Accessing zmq_address after shutdown raises error."""
     with patch.object(ApiExecutor, "_setup_rms_environment"):
         executor = ApiExecutor(mock_config, zmq_address="ipc:///tmp/nonexistent.sock")
@@ -239,11 +235,11 @@ def test_zmq_address_raises_after_shutdown(mock_config: ApiRmsConfig) -> None:
             _ = executor.zmq_address
 
 
-def test_create_proxy_retries_ping(mock_config: ApiRmsConfig) -> None:
+def test_create_proxy_retries_ping(mock_config: ApiConfig) -> None:
     """_create_proxy retries ping on failure."""
     with (
         patch.object(ApiExecutor, "_setup_rms_environment"),
-        patch("runrms.executor.api_rms_executor.RmsApiProxy") as mock_proxy_class,
+        patch("runrms.executor.api_executor.RmsApiProxy") as mock_proxy_class,
     ):
         mock_proxy = MagicMock(spec=RmsApiProxy)
         # Fail twice
@@ -258,11 +254,11 @@ def test_create_proxy_retries_ping(mock_config: ApiRmsConfig) -> None:
         assert mock_proxy._ping.call_count == 3
 
 
-def test_create_proxy_shuts_down_on_timeout(mock_config: ApiRmsConfig) -> None:
+def test_create_proxy_shuts_down_on_timeout(mock_config: ApiConfig) -> None:
     """_create_proxy shuts down executor if ping fails."""
     with (
         patch.object(ApiExecutor, "_setup_rms_environment"),
-        patch("runrms.executor.api_rms_executor.RmsApiProxy") as mock_proxy_class,
+        patch("runrms.executor.api_executor.RmsApiProxy") as mock_proxy_class,
         patch.object(ApiExecutor, "shutdown") as mock_shutdown,
     ):
         mock_proxy = MagicMock(spec=RmsApiProxy)

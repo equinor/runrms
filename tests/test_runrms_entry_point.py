@@ -24,8 +24,8 @@ def test_entry_point(
 
     get_version_cmd = (
         f"source {venv_path}/bin/activate;"
-        'python -c "from runrms.config._rms_config import RMSConfig;'
-        'print(RMSConfig()._site_config_file)";'
+        'python -c "from runrms.config._rms_config import RmsConfig;'
+        'print(RmsConfig()._site_config_file)";'
     )
 
     runrms_default_config = subprocess.run(

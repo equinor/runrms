@@ -1,11 +1,11 @@
 from ._rms_config import DEFAULT_CONFIG_FILE
-from .api_rms_config import ApiRmsConfig
-from .fm_rms_config import FMRMSConfig
-from .interactive_rms_config import InteractiveRMSConfig
+from .api_config import ApiConfig
+from .fm_config import ForwardModelConfig
+from .interactive_config import InteractiveConfig
 
 __all__ = [
     "DEFAULT_CONFIG_FILE",
-    "ApiRmsConfig",
-    "FMRMSConfig",
-    "InteractiveRMSConfig",
+    "ApiConfig",
+    "ForwardModelConfig",
+    "InteractiveConfig",
 ]

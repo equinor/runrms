@@ -8,10 +8,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from textwrap import dedent
 
-from runrms.config.fm_rms_config import FMRMSConfig
-from runrms.exceptions import RMSRuntimeError
+from runrms.config import ForwardModelConfig
+from runrms.exceptions import RmsRuntimeError
 
-from ._rms_executor import RMSExecutionMode, RMSExecutor
+from ._rms_executor import RmsExecutionMode, RmsExecutor
 
 
 @contextmanager
@@ -25,14 +25,14 @@ def pushd(path: str | Path) -> Generator[None, None, None]:
         os.chdir(cwd_)
 
 
-class FMRMSExecutor(RMSExecutor):
+class ForwardModelExecutor(RmsExecutor):
     """
     Class for executing runrms as forward model job
     """
 
-    config: FMRMSConfig
+    config: ForwardModelConfig
 
-    def __init__(self, config: FMRMSConfig) -> None:
+    def __init__(self, config: ForwardModelConfig) -> None:
         super().__init__(config)
         if (license_file := self.config.site_config.batch_lm_license_file) is not None:
             self.update_exec_env("LM_LICENSE_FILE", license_file)
@@ -124,9 +124,9 @@ class FMRMSExecutor(RMSExecutor):
         print(fail_msg, file=sys.stderr)
 
     @property
-    def exec_mode(self) -> RMSExecutionMode:
+    def exec_mode(self) -> RmsExecutionMode:
         """Executing in batch mode."""
-        return RMSExecutionMode.batch
+        return RmsExecutionMode.batch
 
     def run(self) -> int:
         """Main executor entry point."""
@@ -137,7 +137,7 @@ class FMRMSExecutor(RMSExecutor):
             self.config._version_given != self.config.version
             and not self.config.allow_no_env
         ):
-            raise RMSRuntimeError(
+            raise RmsRuntimeError(
                 "RMS environment not specified for version: "
                 f"{self.config._version_given}"
             )
@@ -163,7 +163,7 @@ class FMRMSExecutor(RMSExecutor):
             return exit_status
 
         if not os.path.isfile(self.config.target_file):
-            raise RMSRuntimeError(
+            raise RmsRuntimeError(
                 "The RMS run did not produce the expected file: "
                 f"{self.config.target_file}"
             )
@@ -172,7 +172,7 @@ class FMRMSExecutor(RMSExecutor):
             return exit_status
 
         if os.path.getmtime(self.config.target_file) == self.config.target_file_mtime:
-            raise RMSRuntimeError(
+            raise RmsRuntimeError(
                 f"The target file: {self.config.target_file} is unmodified - "
                 "interpreted as failure"
             )

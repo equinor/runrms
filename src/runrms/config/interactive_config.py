@@ -2,12 +2,12 @@ import argparse
 import logging
 import os
 
-from ._rms_config import RMSConfig
+from ._rms_config import RmsConfig
 
 logger = logging.getLogger(__name__)
 
 
-class InteractiveRMSConfig(RMSConfig):
+class InteractiveConfig(RmsConfig):
     """A class which holds the necessary configuration for executing
     runrms in interactive mode.
 

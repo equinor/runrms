@@ -104,6 +104,6 @@ def test_rms_forward_model_seed_invalid(
 
     assert re.search(
         "Forward model step pre-experiment validation failed: "
-        + r"FMRMSConfig: Multi seed file \S+ contains non-number values",
+        + r"ForwardModelConfig: Multi seed file \S+ contains non-number values",
         output.stderr,
     )

@@ -6,10 +6,10 @@ from pytest import MonkeyPatch
 
 from runrms.config import (
     DEFAULT_CONFIG_FILE,
-    FMRMSConfig,
+    ForwardModelConfig,
 )
 from runrms.exceptions import (
-    RMSProjectNotFoundError,
+    RmsProjectNotFoundError,
 )
 
 
@@ -32,7 +32,7 @@ def _mocked_args() -> Mock:
 def test_config_ok(fm_executor_env: Path) -> None:
     args = _mocked_args()
 
-    config = FMRMSConfig(args)
+    config = ForwardModelConfig(args)
     assert config is not None
 
 
@@ -40,8 +40,8 @@ def test_missing_project() -> None:
     args = _mocked_args()
     args.project = "another_project"
 
-    with pytest.raises(RMSProjectNotFoundError):
-        FMRMSConfig(args)
+    with pytest.raises(RmsProjectNotFoundError):
+        ForwardModelConfig(args)
 
 
 @pytest.mark.parametrize("rms_seed", ["", "a", "123x"])
@@ -52,7 +52,7 @@ def test_bad_seed_from_env_var(
     monkeypatch.setenv("RMS_SEED", rms_seed)
 
     with pytest.raises(ValueError, match="'RMS_SEED' environment variable"):
-        FMRMSConfig(args)
+        ForwardModelConfig(args)
 
 
 @pytest.mark.parametrize(
@@ -70,7 +70,7 @@ def test_single_seed_ok(fm_executor_env: Path, iens: int, expected_result: int) 
     with open("run_path/RMS_SEED", "w") as f:
         f.write(contents)
 
-    config = FMRMSConfig(args)
+    config = ForwardModelConfig(args)
     assert config.seed == expected_result
 
 
@@ -89,7 +89,7 @@ def test_multi_seed_ok(fm_executor_env: Path, iens: int, expected_result: int) -
     with open("run_path/random.seeds", "w") as f:
         f.write("\n".join(contents))
 
-    config = FMRMSConfig(args)
+    config = ForwardModelConfig(args)
     assert config.seed == expected_result
 
 
@@ -112,7 +112,7 @@ def test_single_seed_invalid(
         f.write(contents)
 
     with pytest.raises(ValueError, match=expected_error):
-        FMRMSConfig(args)
+        ForwardModelConfig(args)
 
 
 @pytest.mark.parametrize(
@@ -138,4 +138,4 @@ def test_multi_seed_invalid(
         f.write("\n".join(contents))
 
     with pytest.raises(ValueError, match=expected_error):
-        FMRMSConfig(args)
+        ForwardModelConfig(args)
