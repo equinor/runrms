@@ -531,3 +531,11 @@ def test_get_on_root_raises(proxy_with_mocks: RmsApiProxy) -> None:
     """get() on root proxy raises."""
     with pytest.raises(RuntimeError, match="Cannot get value of root proxy"):
         proxy_with_mocks.get()
+
+
+def test_no_get_on_dict_key_raises(proxy_with_mocks: RmsApiProxy) -> None:
+    """Helpful serialization error is raised when using an RmsApiProxy as an arg."""
+    some = {}
+
+    with pytest.raises(TypeError, match="Unable to serialize request to rmsapi"):
+        some[proxy_with_mocks.some_attr] = "foo"

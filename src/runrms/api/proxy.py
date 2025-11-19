@@ -154,6 +154,16 @@ class RmsApiProxy:
                     response.traceback,
                 )
             return response
+        except TypeError as e:
+            raise TypeError(
+                "Unable to serialize request to rmsapi. This can happen for "
+                "several reasons:\n"
+                "1. You're using an attribute like 'some.attr' directly. You must "
+                "instead use 'some.attr.get()' to use the actual value.\n"
+                "2. You're passing an object where some attribute is being used "
+                "in a way similar to 1. You must called '.get()' on it first.\n"
+                f"Details: Request: {request}, Error: {e}"
+            ) from e
         except zmq.Again as e:
             logger.error(f"Request timed out after {self._rcv_timeout_ms}ms")
             raise TimeoutError(f"Request timed out: {e}") from e
