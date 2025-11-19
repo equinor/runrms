@@ -161,7 +161,7 @@ class RmsApiProxy:
                 "1. You're using an attribute like 'some.attr' directly. You must "
                 "instead use 'some.attr.get()' to use the actual value.\n"
                 "2. You're passing an object where some attribute is being used "
-                "in a way similar to 1. You must called '.get()' on it first.\n"
+                "in a way similar to 1. You must call '.get()' on it first.\n"
                 f"Details: Request: {request}, Error: {e}"
             ) from e
         except zmq.Again as e:
