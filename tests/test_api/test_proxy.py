@@ -73,6 +73,12 @@ def test_private_attr_raises(proxy_with_mocks: RmsApiProxy) -> None:
         _ = proxy_with_mocks._private
 
 
+def test_str_repr_on_root_proxy_gives_instance(proxy_with_mocks: RmsApiProxy) -> None:
+    """Str and repr print the root RmsApiProxy instance with its address."""
+    assert str(proxy_with_mocks).startswith("<RmsApiProxy connected to ipc://")
+    assert repr(proxy_with_mocks).startswith("<RmsApiProxy connected to ipc://")
+
+
 def test_version_special_case(
     proxy_with_mocks: RmsApiProxy, mock_socket: MagicMock
 ) -> None:
@@ -495,6 +501,13 @@ def test_shutdown_sends_request(
     sent_data = mock_socket.send.call_args[0][0]
     request = Request.deserialize(sent_data)
     assert request.msg_type == "shutdown"
+
+
+def test_shutdown_on_child_proxy_raises(proxy_with_mocks: RmsApiProxy) -> None:
+    """Accessing attribute returns new proxy with extended path."""
+    child = proxy_with_mocks.some_attr
+    with pytest.raises(RuntimeError, match="Shutdown can only be called on root"):
+        child._shutdown()
 
 
 def test_cleanup_closes_socket(
