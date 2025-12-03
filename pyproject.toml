@@ -69,7 +69,7 @@ norecursedirs = [
     "dist",
     "build",
 ]
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers --basetemp=/tmp/pytest"
 markers = [
     "integration: Marks a test as an integration test",
     "onprem: Marks a test as valid only in an on-prem environment",

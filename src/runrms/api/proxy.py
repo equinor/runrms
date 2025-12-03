@@ -269,7 +269,7 @@ class RmsApiProxy:
     def __str__(self) -> str:
         """Forward string conversion to worker."""
         if not self._path:
-            return f"<RmsApiProxy connected to {self._zmq_address}"
+            return f"<RmsApiProxy connected to {self._zmq_address}>"
 
         request = Request(msg_type="call", path=[*self._path, "__str__"])
         response = self._send_request(request)
@@ -278,7 +278,7 @@ class RmsApiProxy:
     def __repr__(self) -> str:
         """Forward repr conversion to worker."""
         if not self._path:
-            return f"<RmsApiProxy connected to {self._zmq_address}"
+            return f"<RmsApiProxy connected to {self._zmq_address}>"
 
         request = Request(msg_type="call", path=[*self._path, "__repr__"])
         response = self._send_request(request)
