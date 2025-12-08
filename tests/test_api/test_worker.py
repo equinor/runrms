@@ -1,5 +1,11 @@
 """Tests for the api worker."""
 
+import signal
+from unittest.mock import MagicMock, patch
+
+import pytest
+import zmq
+
 from runrms.api.worker import ApiWorker, ProxyRef, Request, Response
 
 from .conftest import MockNested, MockUnpickleable
@@ -12,6 +18,35 @@ def test_ping(mock_worker: ApiWorker) -> None:
 
     assert response.success
     assert response.value == "pong"
+
+
+def test_signal_handler(mock_worker: ApiWorker) -> None:
+    """Signal handler sets running flag to false."""
+    assert mock_worker.running
+    mock_worker._signal_handler(signal.SIGTERM, None)
+    assert mock_worker.running is False
+
+
+def test_setup_zmq(mock_worker: ApiWorker) -> None:
+    """Setup zmq establishes the zmq context, socket, and timeouts."""
+    assert mock_worker._context is None
+    assert mock_worker._socket is None
+    mock_worker.setup_zmq()
+    assert isinstance(mock_worker._context, zmq.Context)
+    assert isinstance(mock_worker._socket, zmq.Socket)
+
+
+def test_zmq_properties(mock_worker: ApiWorker) -> None:
+    """Exceptions raised when context and socket are not set."""
+    with pytest.raises(RuntimeError, match="ZMQ context"):
+        _ = mock_worker.context
+    with pytest.raises(RuntimeError, match="ZMQ socket"):
+        _ = mock_worker.socket
+
+    mock_worker.setup_zmq()
+    # No longer raise
+    _ = mock_worker.context
+    _ = mock_worker.socket
 
 
 def test_shutdown(mock_worker: ApiWorker) -> None:
@@ -114,7 +149,7 @@ def test_call_with_empty_path(mock_worker: ApiWorker) -> None:
     assert not response.success
     assert response.error_type == "ValueError"
     assert response.error
-    assert "empty access path" in response.error
+    assert "Cannot call method on empty access path" in response.error
 
 
 def test_call_method_raises_exception(mock_worker: ApiWorker) -> None:
@@ -127,6 +162,17 @@ def test_call_method_raises_exception(mock_worker: ApiWorker) -> None:
     assert response.error
     assert "Intentional error" in response.error
     assert response.traceback is not None
+
+
+def test_setattr_with_empty_path(mock_worker: ApiWorker) -> None:
+    """Setting attribute on an empty path returns an error."""
+    request = Request(msg_type="setattr", path=[], value=43)
+    response = mock_worker.execute_request(request)
+
+    assert not response.success
+    assert response.error_type == "ValueError"
+    assert response.error
+    assert "Cannot set attribute on empty access path" in response.error
 
 
 def test_setattr_simple_value(mock_worker: ApiWorker) -> None:
@@ -247,6 +293,27 @@ def test_iterator_returns_reference(mock_worker: ApiWorker) -> None:
     assert isinstance(response.value, ProxyRef)
 
 
+def test_execute_request_raises_stopiteration(mock_worker: ApiWorker) -> None:
+    """StopIteration being raised returns a StopIteration response."""
+    req_iter = Request(msg_type="call", path=["__iter__"])
+    # Create the proxy ref to a MockApi iterator
+    res_ref = mock_worker.execute_request(req_iter)
+
+    req_next = Request(msg_type="call", path=["$ref", res_ref.value.obj_id, "__next__"])
+    # Exhaust the iterator
+    for _ in mock_worker.api_object:
+        res = mock_worker.execute_request(req_next)
+        assert res.success is True
+
+    # Iterated to the end, so a StopIteration should be raised now.
+    res_stop = mock_worker.execute_request(req_next)
+    assert res_stop.success is False
+    assert res_stop.value is None
+    assert res_stop.error == "StopIteration"
+    assert res_stop.error_type == "StopIteration"
+    assert res_stop.traceback is None
+
+
 def test_request_serialization_roundtrip() -> None:
     """Serializing and deserializing a request both validate and are equal."""
     request = Request(
@@ -292,3 +359,56 @@ def test_response_with_proxy_reference_serialization() -> None:
 
     assert deserialized.success
     assert deserialized.value == {"obj_id": "42"}
+
+
+def test_run_establishes_zmq(mock_worker: ApiWorker) -> None:
+    """Running the worker establishes the zmq context."""
+    with patch("runrms.api.worker.zmq") as mock_zmq:
+        mock_context = MagicMock()
+        mock_socket = MagicMock()
+        mock_zmq.Context.return_value = mock_context
+        mock_context.socket.return_value = mock_socket
+
+        # Mock the return value of recv
+        mock_socket.recv.return_value = Request(
+            msg_type="shutdown", path=[]
+        ).serialize()
+        mock_zmq.Again = Exception
+
+        mock_worker.run(mock_worker.api_object)
+
+        mock_context.socket.assert_called_once_with(mock_zmq.REP)
+        mock_socket.recv.assert_called()
+        mock_socket.send.assert_called()
+
+
+def test_run_handles_exceptions(mock_worker: ApiWorker) -> None:
+    """Exceptions from zmq are handled appropriately."""
+    with patch("runrms.api.worker.zmq") as mock_zmq:
+        mock_context = MagicMock()
+        mock_socket = MagicMock()
+        mock_zmq.Context.return_value = mock_context
+        mock_context.socket.return_value = mock_socket
+
+        class MockAgain(Exception):
+            """Mock zmq.Again."""
+
+        mock_zmq.Again = MockAgain
+        mock_socket.recv.side_effect = [
+            MockAgain,
+            Exception("foo"),
+            Request(msg_type="shutdown", path=[]).serialize(),
+        ]
+
+        mock_worker.run(mock_worker.api_object)
+
+        # Response when Exception("foo") is caught
+        error_res = Response.deserialize(mock_socket.send.call_args_list[0][0][0])
+        assert error_res.success is False
+        assert error_res.error == "foo"
+        assert error_res.error_type == "Exception"
+
+        # Response to shutdown
+        shutdown_res = Response.deserialize(mock_socket.send.call_args_list[1][0][0])
+        assert shutdown_res.success is True
+        assert shutdown_res.value == "shutting down"
