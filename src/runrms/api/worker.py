@@ -197,7 +197,7 @@ class ApiWorker:
             elif request.msg_type == "setattr":
                 self._execute_setattr(obj, path, request.value)
                 result = None
-            else:
+            else:  # pragma: no cover not possible to test with Pydantic
                 # Should be unreachable, as Pydantic validation will have failed at
                 # Request object instantiation.
                 raise ValueError(f"Unknown message type: {request.msg_type}")
@@ -242,7 +242,7 @@ class ApiWorker:
     def _execute_setattr(self, obj: Any, path: list[str], value: Any) -> None:
         """Execute setattr."""
         if not path:
-            raise ValueError("Cannot 'setattr' on empty path")
+            raise ValueError("Cannot set attribute on empty access path")
 
         for attr in path[:-1]:
             obj = getattr(obj, attr)
@@ -255,10 +255,10 @@ class ApiWorker:
         This handles a few issues around pickling:
 
         - If pickling fails on the result, it is returned as a ProxyRef.
-        - Pickled can succeed, but contain a reference to '_rmsapi' or 'rmsapi'. Python
+        - Pickling can succeed but contain a reference to '_rmsapi' or 'rmsapi'. Python
           will attempt to re-assemble it on the client side, but fail because those
           packages do not exist there. So check the module name and create a ProxyRef if
-          so, by raising an exception that is caught.
+          so by raising an TypeError that is caught.
         """
         result_type = type(result)
         module_name = result_type.__module__
@@ -289,7 +289,7 @@ class ApiWorker:
     def run(self, api_object: Any | None = None) -> None:
         """Main worker loop."""
         try:
-            if not api_object:
+            if not api_object:  # pragma: no cover
                 import rmsapi  # type: ignore[import-not-found] # noqa: PLC0415 top of file
                 import rmsapi.jobs  # type: ignore[import-not-found] # noqa: PLC0415 top of file
                 import rmsapi.rms  # type: ignore[import-not-found] # noqa: PLC0415 top of file
@@ -319,7 +319,6 @@ class ApiWorker:
                         traceback=traceback.format_exc(),
                     )
                     self.socket.send(response.serialize())
-
         finally:
             self.cleanup()
 
@@ -333,7 +332,7 @@ class ApiWorker:
             self._context = None
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     """Entry point for worker process."""
     if len(sys.argv) < 2:
         print("Usage: worker.py <zmq_address>", file=sys.stderr)
@@ -344,5 +343,5 @@ def main() -> None:
     worker.run()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
