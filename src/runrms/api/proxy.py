@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import zmq
 
 from runrms._logging import null_logger
 
 from .worker import Request, Response
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 logger = null_logger(__name__)
 
@@ -54,6 +57,12 @@ class RmsApiProxy:
     creates another child RmsApiProxy with the same connection info.
     """
 
+    _METHOD_TIMEOUTS: Mapping[tuple[str, ...], int] = {
+        ("Project", "open"): 300_000,  # 5 mins
+        ("Project", "save"): 120_000,  # 2 mins
+    }
+    """These are methods that are known to extend beyond reasonable timeouts."""
+
     def __init__(
         self,
         zmq_address: str,
@@ -61,8 +70,8 @@ class RmsApiProxy:
         *,
         _shared_context: zmq.Context[zmq.Socket[bytes]] | None = None,
         _shared_socket: zmq.Socket[bytes] | None = None,
-        rcv_timeout_ms: int = 30000,
-        snd_timeout_ms: int = 5000,
+        rcv_timeout_ms: int = 60_000,  # 1 min
+        snd_timeout_ms: int = 5_000,
     ) -> None:
         """Initialize proxy.
 
@@ -189,6 +198,29 @@ class RmsApiProxy:
             snd_timeout_ms=self._snd_timeout_ms,
         )
 
+    def _get_method_timeout(self, path: list[str]) -> int | None:
+        """Get custom timeout for a method based on its path.
+
+        Args:
+            path: The method path (e.g., ["Project", "open"])
+
+        Returns:
+            Custom timeout in milliseconds if found, or None
+        """
+        # Try to match Class.method
+        if len(path) >= 2:
+            method_key = tuple(path[-2:])
+            if method_key in self._METHOD_TIMEOUTS:
+                return self._METHOD_TIMEOUTS[method_key]
+
+        # Try to match method only
+        if len(path) >= 1:
+            for key, timeout in self._METHOD_TIMEOUTS.items():
+                if len(key) == 1 and key[0] == path[-1]:
+                    return timeout
+
+        return None
+
     def __getattr__(self, name: str) -> Any:
         """Forward attribute access to worker."""
         if name == "__version__":
@@ -215,14 +247,35 @@ class RmsApiProxy:
         response = self._send_request(request)
         return self._handle_response_value(response)
 
+    def _send_call(self, *args: Any, **kwargs: Any) -> Any:
+        """Send forward method call to worker."""
+        request = Request(msg_type="call", path=self._path, args=args, kwargs=kwargs)
+        response = self._send_request(request)
+        return self._handle_response_value(response)
+
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """Forward method call to worker."""
         if not self._path:
             raise TypeError("Root proxy is not callable")
 
-        request = Request(msg_type="call", path=self._path, args=args, kwargs=kwargs)
-        response = self._send_request(request)
-        return self._handle_response_value(response)
+        timeout = kwargs.pop("_timeout", None)
+
+        if timeout is None:
+            timeout = self._get_method_timeout(self._path)
+
+        if timeout is not None:
+            default_timeout = self._rcv_timeout_ms
+            logger.debug(
+                f"Using custom timeout of {timeout}ms for "
+                f"{'.'.join(self._path)} (default: {default_timeout}ms)"
+            )
+            self._socket.setsockopt(zmq.RCVTIMEO, timeout)
+            try:
+                return self._send_call(*args, **kwargs)
+            finally:
+                self._socket.setsockopt(zmq.RCVTIMEO, default_timeout)
+
+        return self._send_call(*args, **kwargs)
 
     def __iter__(self) -> Any:
         """Forward iteration to worker."""

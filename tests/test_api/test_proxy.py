@@ -26,7 +26,7 @@ def test_root_proxy_creates_socket(
 
     mock_context.socket.assert_called_once_with(zmq.REQ)
     mock_socket.connect.assert_called_once_with(zmq_address)
-    mock_socket.setsockopt.assert_any_call(zmq.RCVTIMEO, 30000)
+    mock_socket.setsockopt.assert_any_call(zmq.RCVTIMEO, 60000)
     mock_socket.setsockopt.assert_any_call(zmq.SNDTIMEO, 5000)
 
 
@@ -338,6 +338,91 @@ def test_call_on_root_raises(proxy_with_mocks: RmsApiProxy) -> None:
     This is like 'rmsapi()'."""
     with pytest.raises(TypeError, match="Root proxy is not callable"):
         proxy_with_mocks()
+
+
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        (["Project", "open"], RmsApiProxy._METHOD_TIMEOUTS[("Project", "open")]),
+        (["Project", "save"], RmsApiProxy._METHOD_TIMEOUTS[("Project", "save")]),
+        (["foo"], None),
+    ],
+)
+def test_get_method_timeout(
+    proxy_with_mocks: RmsApiProxy,
+    mock_socket: MagicMock,
+    path: list[str],
+    expected: int | None,
+) -> None:
+    """Timeouts are returned correctly for certain paths."""
+    assert proxy_with_mocks._get_method_timeout(path) == expected
+
+
+def test_get_method_timeout_method_only(
+    proxy_with_mocks: RmsApiProxy, mock_socket: MagicMock
+) -> None:
+    """Timeouts are returned correctly for certain method only paths."""
+    proxy_with_mocks._path.append("Project")
+    path = ("save",)
+    proxy_with_mocks._METHOD_TIMEOUTS[path] = 400  # type: ignore[index]
+    assert proxy_with_mocks._get_method_timeout(list(path)) == 400
+
+
+def test_call_method_with_timeout_arg(
+    proxy_with_mocks: RmsApiProxy, mock_socket: MagicMock
+) -> None:
+    """Timeout argument to call is preferred and restores the default."""
+    mock_socket.recv.return_value = mock_response(value=100)
+    proxy_with_mocks.get_list(_timeout=123)
+
+    # Ensure _timeout was pop'd before req sent
+    req = Request.deserialize(mock_socket.send.call_args.args[0])
+    assert "_timeout" not in req.kwargs
+
+    timeouts = [
+        call.args[1]
+        for call in mock_socket.setsockopt.call_args_list
+        if call.args[0] == zmq.RCVTIMEO
+    ]
+    default_timeout = proxy_with_mocks._rcv_timeout_ms
+    # Initialization, set by call, restored after call
+    assert timeouts == [default_timeout, 123, default_timeout]
+
+
+def test_call_method_has_known_timeout(
+    proxy_with_mocks: RmsApiProxy, mock_socket: MagicMock
+) -> None:
+    """Timeout argument to call with a known timeout uses and restores the default."""
+    mock_socket.recv.return_value = mock_response(value=100)
+    proxy_with_mocks.Project.open()
+    timeouts = [
+        call.args[1]
+        for call in mock_socket.setsockopt.call_args_list
+        if call.args[0] == zmq.RCVTIMEO
+    ]
+    default_timeout = proxy_with_mocks._rcv_timeout_ms
+
+    assert timeouts == [
+        default_timeout,
+        RmsApiProxy._METHOD_TIMEOUTS[("Project", "open")],
+        default_timeout,
+    ]
+
+
+def test_call_method_has_known_timeout_prefers_timeout_arg(
+    proxy_with_mocks: RmsApiProxy, mock_socket: MagicMock
+) -> None:
+    """Timeout argument given to method is preferred over known timeout."""
+    mock_socket.recv.return_value = mock_response(value=100)
+    proxy_with_mocks.Project.open(_timeout=1)
+    timeouts = [
+        call.args[1]
+        for call in mock_socket.setsockopt.call_args_list
+        if call.args[0] == zmq.RCVTIMEO
+    ]
+    default_timeout = proxy_with_mocks._rcv_timeout_ms
+
+    assert timeouts == [default_timeout, 1, default_timeout]
 
 
 def test_call_returns_proxy_for_reference(
