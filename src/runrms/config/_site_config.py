@@ -44,8 +44,15 @@ class SiteConfig(BaseModel):
         latest = max(
             version_parse(v) for v in self.versions if v.startswith(f"{major}.{minor}")
         )
-        _, _, patch = latest.release
-        return patch
+        return latest.release[2]
+
+    def get_newest_build_version(self, major: int, minor: int, patch: int) -> int:
+        latest = max(
+            version_parse(v)
+            for v in self.versions
+            if v.startswith(f"{major}.{minor}.{patch}")
+        )
+        return latest.release[3]
 
     @model_validator(mode="after")
     def default_version_exists_validator(self) -> Self:

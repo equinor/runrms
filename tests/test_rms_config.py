@@ -32,6 +32,7 @@ def test_resolve_version(default_config_file: dict[str, Any]) -> None:
     assert _resolve_version("14.2.1", site_config, None) == "14.2.1"
     assert _resolve_version("14.5", site_config, None) == "14.5"
     assert _resolve_version("14.5.0.1", site_config, None) == "14.5.0.1"
+    assert _resolve_version("15.0.1.0", site_config, None) == "15.0.1.0"
     assert _resolve_version(None, site_config, None) == "14.2.2"
 
     with pytest.raises(
@@ -44,16 +45,22 @@ def test_resolve_version(default_config_file: dict[str, Any]) -> None:
 
 
 def test_resolve_version_from_project_master(
-    default_config_file: dict[str, Any], executor_env: Path
+    default_config_file: dict[str, Any],
+    executor_env: Path,
 ) -> None:
     site_config = SiteConfig.model_validate(default_config_file)
     rms_project = RmsProject.from_filepath("project")
+
     version = _resolve_version(None, site_config, rms_project)
     assert version == "14.2.2"
 
     rms_project.master.version = "14.2.2"
     version = _resolve_version(None, site_config, rms_project)
     assert version == "14.2.2"
+
+    rms_project.master.version = "15.0.1"
+    version = _resolve_version(None, site_config, rms_project)
+    assert version == "15.0.1.1"
 
     rms_project.master.version = "10.0.0"
     with pytest.raises(
