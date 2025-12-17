@@ -63,18 +63,26 @@ def _resolve_version(
             f"RMS version '{version}' is not supported. "
             "To see the supported versions, run `rms -l` or `runrms -l`."
         )
-    if rms_project:
-        if rms_project.master.version in site_config.versions:
-            master_version = version_parse(rms_project.master.version)
-            major = master_version.major
-            minor = master_version.minor
 
+    if rms_project:
+        master_version = version_parse(rms_project.master.version)
+        major = master_version.major
+        minor = master_version.minor
+
+        if rms_project.master.version in site_config.versions:
             # Handle RMS 14.2 specially as it stores no patch version internally.
             if major == 14 and minor <= 2:
                 newest_patch = site_config.get_newest_patch_version(major, minor)
                 return f"{major}.{minor}.{newest_patch}"
 
             return rms_project.master.version
+
+        # RMS 15+ gives three coordinates in .master, but is released with four
+        # coordinates.
+        if major >= 15:
+            patch = master_version.micro
+            newest_build = site_config.get_newest_build_version(major, minor, patch)
+            return f"{major}.{minor}.{patch}.{newest_build}"
 
         raise RmsVersionError(
             f"RMS version '{rms_project.master.version}' "
