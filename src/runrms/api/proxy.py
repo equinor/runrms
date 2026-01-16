@@ -353,11 +353,11 @@ class RmsApiProxy:
         response = self._send_request(request)
         return response.value
 
-    def __bool__(self) -> int:
+    def __bool__(self) -> bool:
         """Forward bool() to worker."""
         request = Request(msg_type="call", path=[*self._path, "__bool__"])
         response = self._send_request(request)
-        return response.value
+        return bool(response.value)
 
     def __int__(self) -> int:
         """Forward int() to worker."""
@@ -365,7 +365,7 @@ class RmsApiProxy:
         response = self._send_request(request)
         return response.value
 
-    def __float__(self) -> int:
+    def __float__(self) -> float:
         """Forward float() to worker."""
         request = Request(msg_type="call", path=[*self._path, "__float__"])
         response = self._send_request(request)
