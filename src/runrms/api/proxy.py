@@ -447,7 +447,6 @@ class RmsApiProxy:
         logger.info("Sending shutdown to worker")
         request = Request(msg_type="shutdown", path=[])
         self._send_request(request)
-        self._cleanup()
 
     def _cleanup(self) -> None:
         """Clean up ZMQ resources."""
