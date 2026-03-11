@@ -4,6 +4,8 @@ from typing import Self
 from packaging.version import parse as version_parse
 from pydantic import BaseModel, Field, model_validator
 
+from runrms import RmsVersionError
+
 
 class Env(BaseModel):
     APS_TOOLBOX_PATH: str | None = Field(default=None)
@@ -41,17 +43,23 @@ class SiteConfig(BaseModel):
     versions: dict[str, Version]
 
     def get_newest_patch_version(self, major: int, minor: int) -> int:
-        latest = max(
-            version_parse(v) for v in self.versions if v.startswith(f"{major}.{minor}")
-        )
+        version = f"{major}.{minor}"
+        versions = [v for v in self.versions if v.startswith(version)]
+
+        if len(versions) == 0:
+            raise RmsVersionError(f"RMS version '{version}' is not supported.")
+
+        latest = max(version_parse(v) for v in versions)
         return latest.release[2]
 
     def get_newest_build_version(self, major: int, minor: int, patch: int) -> int:
-        latest = max(
-            version_parse(v)
-            for v in self.versions
-            if v.startswith(f"{major}.{minor}.{patch}")
-        )
+        version = f"{major}.{minor}.{patch}"
+        versions = [v for v in self.versions if v.startswith(version)]
+
+        if len(versions) == 0:
+            raise RmsVersionError(f"RMS version '{version}' is not supported.")
+
+        latest = max(version_parse(v) for v in versions)
         return latest.release[3]
 
     @model_validator(mode="after")

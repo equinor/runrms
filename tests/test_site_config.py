@@ -2,6 +2,7 @@
 
 import pytest
 
+from runrms import RmsVersionError
 from runrms.config._site_config import Env, GlobalEnv, SiteConfig, Version
 
 
@@ -40,3 +41,13 @@ def test_get_newest_build_version(site_config: SiteConfig) -> None:
     """Tests that getting the newest build version works as expected."""
     assert site_config.get_newest_build_version(2, 2, 0) == 2
     assert site_config.get_newest_build_version(2, 2, 1) == 0
+
+
+def test_get_newest_patch_version_not_configured(site_config: SiteConfig) -> None:
+    with pytest.raises(RmsVersionError, match="RMS version '99.9'"):
+        site_config.get_newest_patch_version(99, 9)
+
+
+def test_get_newest_build_version_not_configured(site_config: SiteConfig) -> None:
+    with pytest.raises(RmsVersionError, match="RMS version '99.9.9'"):
+        site_config.get_newest_build_version(99, 9, 9)
