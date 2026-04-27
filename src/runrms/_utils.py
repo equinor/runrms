@@ -4,7 +4,6 @@ logger = logging.getLogger(__name__)
 
 
 class BColors:
-    # pylint: disable=too-few-public-methods
     # local class for ANSI term color commands
 
     HEADER = "\033[93;42m"
