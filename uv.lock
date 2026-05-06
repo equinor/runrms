@@ -764,7 +764,7 @@ wheels = [
 
 [[package]]
 name = "ert"
-version = "21.1.1"
+version = "21.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -824,7 +824,7 @@ dependencies = [
     { name = "xtgeo" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/32/85/3b5d4bdbd96a72082c3f2524b0a00377e7ff0f11f0856a418edc89c02b83/ert-21.1.1-py3-none-any.whl", hash = "sha256:d92ac2d409bd57113145e0efe4d151902896d304d69520d9eb53b9e3f16c60f2", size = 791702, upload-time = "2026-04-28T11:11:43.562Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/bd/401a91d04e277b8b4fe930adeee0b2820bd8c2466fd3cc8f4693fa0ea9ae/ert-21.1.2-py3-none-any.whl", hash = "sha256:88e645b555a7e7ef913d352a8bd5322c4852bbc20ef55de3ff6ed008d77c9317", size = 791709, upload-time = "2026-05-04T07:20:28.109Z" },
 ]
 
 [[package]]
