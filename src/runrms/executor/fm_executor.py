@@ -1,5 +1,6 @@
 import glob
 import os
+import re
 import subprocess
 import sys
 import time
@@ -63,6 +64,37 @@ class ForwardModelExecutor(RmsExecutor[ForwardModelConfig]):
         comp_process = subprocess.run(args=args, check=False)
         return comp_process.returncode
 
+    def _find_job_failures(self, logfile_path: Path) -> str:
+        """Reads through a .log file and returns logs regarding failing jobs.
+
+        Any failure logs must be at the end of the log file as a failing job
+        breaks the workflow and will be the last thing that is logged.
+
+        The method first finds the logs for the last job that was started and returns
+        the findings as a formatted string if any job failures are found.
+        """
+        current_job_line_no = 0
+
+        # Find the line number where the logging of the last job starts
+        with open(logfile_path) as logfile:
+            for line_no, line in enumerate(logfile, start=1):
+                if line.strip().startswith("<pre>"):
+                    current_job_line_no = line_no
+            last_job_line_no = current_job_line_no
+            if last_job_line_no == 0:
+                return ""
+
+        # Collect the logs for the last job and look for failures
+        with open(logfile_path) as logfile:
+            job_failed_msg = ""
+            for line_no, line in enumerate(logfile, start=1):
+                if line_no >= last_job_line_no:
+                    cleaned_text = re.sub(r"<[^>]*>", "", line)
+                    if cleaned_text != "":
+                        job_failed_msg += cleaned_text
+
+        return job_failed_msg if "failed" in job_failed_msg else ""
+
     def print_failure(self, exit_status: int) -> None:
         run_path = self.config.run_path.resolve()
         # Reverse sort so workflow.log is (probably) first and
@@ -111,13 +143,32 @@ class ForwardModelExecutor(RmsExecutor[ForwardModelConfig]):
         * RMS.stderr.NN and RMS.stdout.NN
         * rms/model/workflow.log
         * Other named log files in rms/model, e.g. workflow_sim2seis.log
-        * rms/model/YYYYMMDD-HHMMSS-XXXXX-RMS.log corresponding to your run
+        * rms/model/YYYYMMDD-HHMMSS-XXXXXX-RMS.log corresponding to your run
 
         The following log files were found in this realization's run path:
 
                 """
             )
             fail_msg += "\n".join([f"* {f}" for f in log_files])
+
+            for log_file in log_files:
+                if re.match(
+                    r"^\d{8}-\d{6}-[A-Za-z0-9]{6}-RMS", os.path.basename(log_file)
+                ):
+                    # These logfiles are unstructured and will not give any results
+                    continue
+                try:
+                    job_failed_msg = self._find_job_failures(Path(log_file))
+                except Exception:
+                    job_failed_msg = ""
+                if job_failed_msg:
+                    fail_msg += dedent(
+                        f"""
+    \nThe following logs regarding failed jobs were found in the log file {log_file}:"
+                        """
+                    )
+                    fail_msg += job_failed_msg
+                    break
 
         print(fail_msg, file=sys.stderr)
 

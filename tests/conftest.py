@@ -221,3 +221,60 @@ def master_version() -> str:
                 End GEOMATIC file header
                 """
     )
+
+
+@pytest.fixture
+def workflow_log() -> Callable[[Path], Path]:
+    """Returns a helper function to write a workflow log to file."""
+
+    def _workflow_log(run_path: Path) -> Path:
+        """Writes a workflow log to the workflow.log file at the provided run path."""
+        path = run_path / "workflow.log"
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(
+                dedent(
+                    """
+                Log format
+                <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /></head>
+                <b>Project realization 1</b>
+
+                <pre>
+                Job 1 - Some job that runs OK - for project realization 0
+                </pre>
+                <font color="green"><b>Completed job 1</b></font>
+                <table border="1"><tr><td><b>Elapsed time</b></td><td>0:00:02.2</td></tr><tr><td><b>Total elapsed time</b></td><td>0:00:02.9</td></tr></table>
+
+                <pre>
+                Job 2 - structural_model_initial - for project realization 0
+                <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /></head>
+                <b>Project realization 0</b>
+                <pre>
+
+                Job 1 - Note - for project realization 0 - skipped
+                </pre>
+                <font color="green"><b>Completed job 1</b></font>
+                
+                <pre>
+                Job 2 - failing_python_job.py - for project realization 0
+                Traceback (most recent call last):
+                Python script, line 36
+                Python script, line 24, in main
+                ModuleNotFoundError: No module named 'non_existing_package'
+                Job: failing_python_job.py failed.
+                </pre>
+                <font color='red'><b>Failed job 2</b></font>
+                <font color="red"><b>Workflow structural_model_initial failed</b></font>
+                <table border="1"><tr><td><b>Finish time</b></td><td>15:37:07</td></tr><tr><td><b>Elapsed time for workflow</b></td><td>0:00:20.0</td></tr></table>
+                <hr /><div />
+                Job: structural_model_initial failed.
+                </pre>
+                <font color='red'><b>Failed job 2</b></font>
+                <font color="red"><b>Workflow MAIN failed</b></font>
+                <table border="1"><tr><td><b>Finish time</b></td><td>15:37:07</td></tr><tr><td><b>Elapsed time for workflow</b></td><td>0:00:20.5</td></tr></table>
+                <hr /><div />
+                    """  # noqa: E501
+                )
+            )
+        return path
+
+    return _workflow_log
