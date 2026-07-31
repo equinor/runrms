@@ -130,6 +130,7 @@ file as an option outside of `pyproject.toml`.
 # src/rmsconfig/runrms.yml
 from pathlib import Path
 
+
 def runrms_config_path() -> Path:
     """Returns the absolute path to runrms.yml."""
     return (Path(__file__).parent / "runrms.yml").resolve()
