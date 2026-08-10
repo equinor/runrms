@@ -1,10 +1,12 @@
 import json
 import os
+import re
 import stat
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import Mock, patch
+from textwrap import dedent
+from unittest.mock import Mock, call, patch
 
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
@@ -262,7 +264,7 @@ def test_license_file_from_wrapper_overwrites(
     fm_executor_env: Path,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    """Tests that the the batch license file configuration is preferred. This is set by
+    """Tests that the batch license file configuration is preferred. This is set by
     the fm_executor_env, so we unset the environment variable to check.
 
     The configuration has
@@ -486,6 +488,331 @@ def test_print_failure_when_logs_found_in_rms_model(
 
     for line in captured.err.split("\n"):
         assert line.startswith("\t") is False
+
+
+def test_print_failure_when_job_failure_in_logs(
+    fm_executor_env: Path,
+    workflow_log: Callable[[Path], Path],
+    capsys: CaptureFixture[str],
+) -> None:
+    """Job failure logs should be printed when job failures in the logfiles."""
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        config_file="runrms.yml",
+    )
+
+    run_path = fm_executor_env / "run_path"
+    workflow_log(run_path)
+
+    rms = ForwardModelExecutor(config)
+    action = {"exit_status": 1}
+    with open(run_path / "action.json", "w") as f:
+        f.write(json.dumps(action))
+
+    with patch.object(
+        rms, "_find_job_failures", return_value="Failed job"
+    ) as mocked_find_job_failures:
+        rms.run()
+        captured = capsys.readouterr()
+
+        assert "workflow.log" in captured.err
+        assert (
+            "The following logs regarding failed jobs were found in the log file"
+            in captured.err
+        )
+        assert "Failed job" in captured.err
+
+        mocked_find_job_failures.assert_called_once()
+
+
+def test_print_failure_skips_logfiles_for_complete_rms_run(
+    fm_executor_env: Path,
+) -> None:
+    """The logfiles for the complete RMS run should not be checked.
+
+    Skip looking for job failures in log files on the format
+    YYYYMMDD-HHMMSS-XXXXXX-RMS.log as these are unstructured
+    and will not give any matching results.
+    """
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        config_file="runrms.yml",
+    )
+
+    run_path = Path(fm_executor_env / "run_path")
+    (run_path / "20260101-000000-zdtHhM-RMS.log").touch()
+    (run_path / "20260715-092055-zdtHhM-RMS.log").touch()
+    (run_path / "20262412-135454-jPbOrM-RMS.log").touch()
+    (run_path / "20261705-133409-NgliXA-RMS.log").touch()
+
+    rms = ForwardModelExecutor(config)
+    action = {"exit_status": 1}
+    with open(run_path / "action.json", "w") as f:
+        f.write(json.dumps(action))
+
+    with patch.object(
+        rms, "_find_job_failures", return_value="Failed"
+    ) as mocked_find_job_failures:
+        rms.run()
+        mocked_find_job_failures.assert_not_called()
+
+    (run_path / "workflow.log").touch()
+    with patch.object(
+        rms, "_find_job_failures", return_value=""
+    ) as mocked_find_job_failures:
+        rms.run()
+        mocked_find_job_failures.assert_called_once_with(run_path / "workflow.log")
+
+
+def test_print_failure_print_first_logfile_when_more_than_one_log_has_failures(
+    fm_executor_env: Path,
+    workflow_log: Callable[[Path], Path],
+    capsys: CaptureFixture[str],
+) -> None:
+    """Only the first logfile with failures should be printed.
+
+    When the workflow.log file exists and has failures, only failure logs
+    from this file should be printed as those are the most relevant ones.
+
+    If workflow.log does not have any failures it will look for failures
+    in the other logfiles, printing the first failures it can find.
+    """
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        config_file="runrms.yml",
+    )
+
+    run_path = fm_executor_env / "run_path"
+    workflow_log_path: Path = workflow_log(run_path)
+
+    other_log_path = run_path / "other_log.log"
+    with open(other_log_path, "w", encoding="utf-8") as f:
+        f.write(
+            dedent(
+                """
+                <pre>
+                Job 1 - Some other job that failed - for project realization 0
+                </pre>
+            """
+            )
+        )
+
+    rms = ForwardModelExecutor(config)
+    action = {"exit_status": 1}
+    with open(run_path / "action.json", "w") as f:
+        f.write(json.dumps(action))
+
+    with patch.object(
+        rms, "_find_job_failures", return_value="Failed job"
+    ) as mocked_find_job_failures:
+        rms.run()
+        captured = capsys.readouterr()
+
+        assert "workflow.log" in captured.err
+        assert "other_log" in captured.err
+
+        assert (
+            "The following logs regarding failed jobs were found in the log file"
+            in captured.err
+        )
+        mocked_find_job_failures.assert_called_once_with(workflow_log_path)
+
+        # Verify that deleting workflow.log will print failure from other file
+        mocked_find_job_failures.reset_mock()
+        workflow_log_path.unlink()
+        rms.run()
+
+        assert (
+            "The following logs regarding failed jobs were found in the log file"
+            in captured.err
+        )
+        mocked_find_job_failures.assert_called_once_with(other_log_path)
+
+
+def test_print_failure_no_job_failure_printed_when_no_job_failure_in_logs(
+    capsys: CaptureFixture[str], fm_executor_env: Path
+) -> None:
+    """No job failure logs should be printed when no job failures in the logfiles."""
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        config_file="runrms.yml",
+    )
+
+    run_path = fm_executor_env / "run_path"
+    workflow_path = run_path / "workflow.log"
+    other_log_path = run_path / "other_log.log"
+    workflow_path.touch()
+    other_log_path.touch()
+
+    rms = ForwardModelExecutor(config)
+    action = {"exit_status": 1}
+    with open(run_path / "action.json", "w") as f:
+        f.write(json.dumps(action))
+
+    with patch.object(
+        rms, "_find_job_failures", return_value=""
+    ) as mocked_find_job_failures:
+        rms.run()
+        captured = capsys.readouterr()
+
+        mocked_find_job_failures.assert_has_calls(
+            [call(workflow_path), call(other_log_path)]
+        )
+        assert (
+            "The following logs regarding failed jobs were found in the log file"
+            not in captured.err
+        )
+
+
+def test_print_failure_handles_find_job_failures_exceptions(
+    capsys: CaptureFixture[str], fm_executor_env: Path
+) -> None:
+    """Exceptions occurring while looking for job failures should be handled gracefully.
+
+    Any exceptions occurring while searching through the log files for job failures,
+    should be handled gracefully and not affect any of the other printing operations.
+    """
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        config_file="runrms.yml",
+    )
+
+    run_path = fm_executor_env / "run_path"
+    workflow_path = run_path / "workflow.log"
+    other_log_path = run_path / "other_log.log"
+    workflow_path.touch()
+    other_log_path.touch()
+
+    rms = ForwardModelExecutor(config)
+    action = {"exit_status": 1}
+    with open(run_path / "action.json", "w") as f:
+        f.write(json.dumps(action))
+
+    with patch.object(
+        rms, "_find_job_failures", side_effect=FileNotFoundError("Log file not found.")
+    ) as mocked_find_job_failures:
+        rms.run()
+        captured = capsys.readouterr()
+
+        mocked_find_job_failures.assert_has_calls(
+            [call(workflow_path), call(other_log_path)]
+        )
+        assert (
+            "The following logs regarding failed jobs were found in the log file"
+            not in captured.err
+        )
+
+
+def test_find_job_failures_returns_failures(
+    fm_executor_env: Path, workflow_log: Callable[[Path], Path]
+) -> None:
+    """Test that job failures are found and returned in expected format."""
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        config_file="runrms.yml",
+    )
+
+    run_path = fm_executor_env / "run_path"
+    workflow_log(run_path)
+
+    rms = ForwardModelExecutor(config)
+    job_failed_msg = rms._find_job_failures(run_path / "workflow.log")
+
+    assert "Job: failing_python_job.py failed." in job_failed_msg
+    assert (
+        "ModuleNotFoundError: No module named 'non_existing_package'" in job_failed_msg
+    )
+    assert "Failed job" in job_failed_msg
+
+
+def test_find_job_failures_removes_html_tags(
+    fm_executor_env: Path, workflow_log: Callable[[Path], Path]
+) -> None:
+    """Test that html tags are removed from the returned job failure string."""
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        config_file="runrms.yml",
+    )
+
+    run_path = fm_executor_env / "run_path"
+    workflow_log(run_path)
+
+    rms = ForwardModelExecutor(config)
+    logfile_path = run_path / "workflow.log"
+    job_failed_msg = rms._find_job_failures(logfile_path)
+
+    failed_msg_lines = [x for x in job_failed_msg.splitlines() if x != ""]
+    assert "<pre>" not in failed_msg_lines
+
+    # Check that each message line matches a log line when html tags are removed
+    with open(logfile_path) as logfile:
+        for line in logfile:
+            if any(fail_line in line for fail_line in failed_msg_lines):
+                if "<" in line and ">" in line:
+                    assert line not in failed_msg_lines
+                    line_without_html_tag = re.sub(r"<[^>]*>", "", line)
+                    assert line_without_html_tag.strip() in failed_msg_lines
+                else:
+                    assert line.strip() in failed_msg_lines
+
+
+def test_find_job_failures_empty_string_when_no_job_failures(
+    fm_executor_env: Path,
+) -> None:
+    """Test that the failing message string is empty when no job failures in logs."""
+    config = _create_config(
+        iens=0,
+        project="project",
+        workflow="workflow",
+        run_path="run_path",
+        allow_no_env=True,
+        config_file="runrms.yml",
+    )
+
+    logfile_path = fm_executor_env / "run_path/workflow.log"
+    with open(logfile_path, "w", encoding="utf-8") as f:
+        f.write(
+            dedent(
+                """
+                <pre>
+                Job 1 - Some job that runs OK - for project realization 0
+                </pre>
+            """
+            )
+        )
+
+    rms = ForwardModelExecutor(config)
+    job_failed_msg = rms._find_job_failures(logfile_path)
+
+    assert job_failed_msg == ""
 
 
 def test_lm_license_server_overwritten_during_batch(fm_executor_env: Path) -> None:
