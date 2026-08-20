@@ -134,3 +134,5 @@ warn_unused_ignores = true
 [tool.uv]
 exclude-newer = "1 week"
 
+[tool.uv.exclude-newer-package]
+"ert" = false
