@@ -544,7 +544,7 @@ def test_zmq_timeout_raises(
     proxy_with_mocks: RmsApiProxy, mock_socket: MagicMock
 ) -> None:
     """ZMQ timeout raisers TimeoutError."""
-    mock_socket.recv.side_effect = [zmq.Again(), zmq.Again()]  # type: ignore[no-untyped-call]
+    mock_socket.recv.side_effect = [zmq.Again(), zmq.Again()]
 
     with pytest.raises(TimeoutError, match="Request timed out"):
         proxy_with_mocks.slow_method()
