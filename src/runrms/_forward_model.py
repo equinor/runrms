@@ -1,3 +1,5 @@
+import shlex
+
 from ert import (  # type: ignore
     ForwardModelStepDocumentation,
     ForwardModelStepJSON,
@@ -35,6 +37,8 @@ class Rms(ForwardModelStepPlugin):  # type: ignore
                 "<RMS_VERSION>",
                 "--export-path",
                 "<RMS_EXPORT_PATH>",
+                "--threads",
+                "<NUM_CPU>",
                 "<RMS_OPTS>",
             ],
             default_mapping={
@@ -49,6 +53,14 @@ class Rms(ForwardModelStepPlugin):  # type: ignore
     def validate_pre_realization_run(
         self, fm_step_json: ForwardModelStepJSON
     ) -> ForwardModelStepJSON:
+        # Only RMS_OPTS (the final argument) contains a list of command-line options.
+        # Other arguments, such as project path, must retain its spaces.
+        args = fm_step_json["argList"]
+        try:
+            options = shlex.split(args[-1])
+        except ValueError as err:
+            raise ForwardModelStepValidationError(f"Invalid RMS_OPTS: {err}") from err
+        fm_step_json["argList"] = [*args[:-1], *options]
         return fm_step_json
 
     def validate_pre_experiment(self, fm_step_json: ForwardModelStepJSON) -> None:
