@@ -29,9 +29,27 @@ EXPECTED_JOBS = {"RMS"}
 
 @pytest.mark.requires_ert
 def test_rms_opts_invalid_quotes() -> None:
+    """Invalid shell quoting in RMS_OPTS must fail forward-model validation."""
     job = cast("ForwardModelStepJSON", {"argList": ["project.rms", "--setup 'open"]})
     with pytest.raises(ForwardModelStepValidationError, match="Invalid RMS_OPTS"):
         Rms().validate_pre_realization_run(job)
+
+
+@pytest.mark.requires_ert
+def test_rms_opts_are_split_into_arguments() -> None:
+    """RMS_OPTS must split shell arguments without changing other arguments."""
+    job = cast(
+        "ForwardModelStepJSON",
+        {"argList": ["project with spaces.rms", "--export-path 'path with spaces'"]},
+    )
+
+    validated_job = Rms().validate_pre_realization_run(job)
+
+    assert validated_job["argList"] == [
+        "project with spaces.rms",
+        "--export-path",
+        "path with spaces",
+    ]
 
 
 @pytest.mark.requires_ert
@@ -82,12 +100,10 @@ def test_fm_plugin_docs() -> None:
 
 @pytest.mark.requires_ert
 @pytest.mark.parametrize(
-    ("num_cpu", "rms_opts", "expected_threads"),
+    ("num_cpu", "expected_threads"),
     [
-        (None, "", 1),
-        (4, "", 4),
-        (4, "--threads 2", 2),
-        (4, "--threads 2 --export-path 'path with spaces'", 2),
+        (None, 1),
+        (4, 4),
     ],
 )
 def test_rms_forward_model_ok(
@@ -95,7 +111,6 @@ def test_rms_forward_model_ok(
     monkeypatch: MonkeyPatch,
     fmu_snakeoil_project: None,
     num_cpu: int | None,
-    rms_opts: str,
     expected_threads: int,
 ) -> None:
     """Test that when running ert with the given configuration file,
@@ -105,12 +120,6 @@ def test_rms_forward_model_ok(
     with open("snakeoil.ert", "a") as f:
         if num_cpu is not None:
             f.write(f"\nNUM_CPU {num_cpu}\n")
-    if rms_opts:
-        config = Path("snakeoil.ert").read_text()
-        config = config.replace(
-            "FORWARD_MODEL RMS(", f'FORWARD_MODEL RMS(<RMS_OPTS>="{rms_opts}", '
-        )
-        Path("snakeoil.ert").write_text(config)
 
     subprocess.run(["ert", "test_run", "snakeoil.ert", "--verbose"], check=False)
 
@@ -125,8 +134,31 @@ def test_rms_forward_model_ok(
         assert args[args.index("--threads") + 1] == str(num_cpu or 1)
         parsed = get_parser().parse_args(args)
         assert parsed.threads == expected_threads
-        if "--export-path" in rms_opts:
-            assert parsed.export_path == "path with spaces"
+
+
+@pytest.mark.requires_ert
+def test_rms_opts_threads_override_num_cpu(
+    tmp_path: Path, monkeypatch: MonkeyPatch, fmu_snakeoil_project: None
+) -> None:
+    """RMS_OPTS must override the default thread count generated from NUM_CPU."""
+    monkeypatch.chdir(tmp_path / "ert/model")
+
+    with open("snakeoil.ert", "a") as f:
+        f.write("\nNUM_CPU 4\n")
+    config = Path("snakeoil.ert").read_text()
+    config = config.replace(
+        "FORWARD_MODEL RMS(",
+        'FORWARD_MODEL RMS(<RMS_OPTS>="--threads 2", ',
+    )
+    Path("snakeoil.ert").write_text(config)
+
+    subprocess.run(["ert", "test_run", "snakeoil.ert", "--verbose"], check=False)
+
+    with open(tmp_path / "scratch/user/snakeoil/realization-0/iter-0/jobs.json") as f:
+        jobs_json = json.load(f)
+        args = jobs_json["jobList"][0]["argList"]
+        assert args[args.index("--threads") + 1] == "4"
+        assert get_parser().parse_args(args).threads == 2
 
 
 @pytest.mark.requires_ert

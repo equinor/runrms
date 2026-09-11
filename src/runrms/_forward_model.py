@@ -54,7 +54,7 @@ class Rms(ForwardModelStepPlugin):  # type: ignore
         self, fm_step_json: ForwardModelStepJSON
     ) -> ForwardModelStepJSON:
         # Only RMS_OPTS (the final argument) contains a list of command-line options.
-        # Other arguments, such as project path, must retain its spaces.
+        # Other arguments, such as RMS_PROJECT, must retain their spaces.
         args = fm_step_json["argList"]
         try:
             options = shlex.split(args[-1])
