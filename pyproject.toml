@@ -1,8 +1,5 @@
 [build-system]
-requires = [
-    "setuptools>=45.0",
-    "setuptools_scm[toml]>=6.2",
-]
+requires = ["setuptools>=45.0", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
@@ -14,9 +11,7 @@ description = "A utility to open and run AspenTech's RMS application."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "GPL-3.0" }
-authors = [
-    { name = "Equinor", email = "fg-fmu_atlas@equinor.com" },
-]
+authors = [{ name = "Equinor", email = "fg-fmu_atlas@equinor.com" }]
 classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Utilities",
@@ -25,15 +20,11 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Natural Language :: English",
 ]
 dynamic = ["version"]
-dependencies = [
-    "packaging",
-    "pydantic",
-    "pyyaml",
-    "pyzmq",
-]
+dependencies = ["packaging", "pydantic", "pyyaml", "pyzmq"]
 
 [tool.setuptools.package-data]
 runrms = ["config/runrms.yml"]
@@ -63,13 +54,7 @@ runrms = "runrms.__main__:main"
 rms = "runrms._forward_model"
 
 [tool.pytest.ini_options]
-norecursedirs = [
-    ".git",
-    ".tox",
-    ".env",
-    "dist",
-    "build",
-]
+norecursedirs = [".git", ".tox", ".env", "dist", "build"]
 addopts = "-ra --strict-markers --basetemp=/tmp/pytest"
 markers = [
     "integration: Marks a test as an integration test",
@@ -78,10 +63,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-omit = [
-    "version.py",
-    "tests/**",
-]
+omit = ["version.py", "tests/**"]
 
 [tool.ruff]
 line-length = 88
@@ -89,24 +71,24 @@ exclude = ["version.py", "*venv*/**"]
 
 [tool.ruff.lint]
 ignore = [
-    "C901",  # mccabe complex structure
-    "PLR2004",  # Unnamed magic numbers
+    "C901",    # mccabe complex structure
+    "PLR2004", # Unnamed magic numbers
 ]
 select = [
-    "B",  # flake-8-bugbear
-    "C90",  # mccabe
-    "E",  # pycodestyle-error
-    "F",  # pyflakes
-    "I",  # isort
-    "NPY",  # numpy
+    "B",   # flake-8-bugbear
+    "C90", # mccabe
+    "E",   # pycodestyle-error
+    "F",   # pyflakes
+    "I",   # isort
+    "NPY", # numpy
     "PD",  # pandas-vet
-    "PIE",  # flake8-pie
-    "Q",  # flake8-quotes
-    "RET",  # flake8-return
-    "RSE",  # flake8-raise
-    "SIM",  # flake8-simplify
-    "TCH",  # flake8-type-checking
-    "TID",  # flake8-tidy-imports
+    "PIE", # flake8-pie
+    "Q",   # flake8-quotes
+    "RET", # flake8-return
+    "RSE", # flake8-raise
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "TID", # flake8-tidy-imports
     "UP",  # pyupgrade
 ]
 
@@ -136,3 +118,4 @@ exclude-newer = "1 week"
 
 [tool.uv.exclude-newer-package]
 "ert" = false
+"graphite-maps" = false
