@@ -71,6 +71,45 @@ def test_resolve_version_from_project_master(
 
 
 @pytest.mark.parametrize(
+    "master_version, configured_version",
+    [("V14.1", "14.1.3"), ("V14.2", "14.2.2")],
+)
+def test_rmsconfig_resolves_patch_without_base_version(
+    tmp_path: Path,
+    simple_runrms_config: dict[str, Any],
+    master_version: str,
+    configured_version: str,
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / ".master").write_text(
+        f"Begin GEOMATIC file header\nrelease(1395) = {master_version}\n"
+        "End GEOMATIC file header\n",
+        encoding="utf-8",
+    )
+    versions = simple_runrms_config["versions"]
+    versions[configured_version] = versions["14.2.2"]
+    config_path = tmp_path / "runrms.yml"
+    config_path.write_text(yaml.safe_dump(simple_runrms_config), encoding="utf-8")
+
+    config = RmsConfig(config_path=str(config_path), project=str(project))
+
+    assert config.version == configured_version
+
+
+def test_resolve_version_without_matching_rms14_series(
+    default_config_file: dict[str, Any],
+    executor_env: Path,
+) -> None:
+    site_config = SiteConfig.model_validate(default_config_file)
+    rms_project = RmsProject.from_filepath("project")
+    rms_project.master.version = "14.1.0"
+
+    with pytest.raises(RmsVersionError, match="RMS version '14.1' is not supported."):
+        _resolve_version(None, site_config, rms_project)
+
+
+@pytest.mark.parametrize(
     "config_location, raises",
     [
         ("/foo/bar", True),

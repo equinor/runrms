@@ -69,12 +69,12 @@ def _resolve_version(
         major = master_version.major
         minor = master_version.minor
 
-        if rms_project.master.version in site_config.versions:
-            # Handle RMS 14.2 specially as it stores no patch version internally.
-            if major == 14 and minor <= 2:
-                newest_patch = site_config.get_newest_patch_version(major, minor)
-                return f"{major}.{minor}.{newest_patch}"
+        # RMS 14.1 and 14.2 store no patch version internally.
+        if major == 14 and minor <= 2:
+            newest_patch = site_config.get_newest_patch_version(major, minor)
+            return f"{major}.{minor}.{newest_patch}"
 
+        if rms_project.master.version in site_config.versions:
             return rms_project.master.version
 
         # RMS 15+ gives three coordinates in .master, but is released with four
